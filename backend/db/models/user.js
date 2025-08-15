@@ -5,7 +5,17 @@ const { Model, Validator } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      // define association here
+      // User has many Decks
+      User.hasMany(models.Deck, { foreignKey: 'userId', onDelete: 'CASCADE' });
+      // User has many UserCards
+      User.hasMany(models.UserCard, { foreignKey: 'userId', onDelete: 'CASCADE' });
+      // User has many Friendships as requester
+      User.hasMany(models.Friendship, { foreignKey: 'userId', as: 'Friendships', onDelete: 'CASCADE' });
+      // User has many Friendships as the friend
+      User.hasMany(models.Friendship, { foreignKey: 'friendId', as: 'FriendOf', onDelete: 'CASCADE' });
+      // User has many Comments
+      User.hasMany(models.Comment, { foreignKey: 'userId', onDelete: 'CASCADE' });
+
     }
   }
 
@@ -48,7 +58,7 @@ module.exports = (sequelize, DataTypes) => {
         },
       },
       hashedPassword: {
-        type: DataTypes.STRING.BINARY,
+        type: DataTypes.STRING,
         allowNull: false,
         validate: {
           len: [60, 60],
