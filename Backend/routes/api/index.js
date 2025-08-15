@@ -1,8 +1,12 @@
 const router = require('express').Router();
-const { setTokenCookie } = require('../../utils/auth.js');
+const { restoreUser } = require("../../utils/auth.js");
+const sessionRouter = require('./session.js');
+const usersRouter = require('./users.js');
 const { User } = require('../../db/models');
 
-
+router.use('/session', sessionRouter);
+router.use(restoreUser);
+router.use('/users', usersRouter);
 
 router.get("/api/csrf/restore", (req, res) => {
   const csrfToken = req.csrfToken();
