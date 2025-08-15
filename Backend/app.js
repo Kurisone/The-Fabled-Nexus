@@ -26,11 +26,7 @@ app.use(routes);
 if (!isProduction) {
   app.use(cors());
 }
-app.use(
-    helmet.crossOriginEmbedderPolicy({
-        policy: "cross-origin"
-    })
-);
+app.use(helmet.crossOriginEmbedderPolicy());
 
 app.use(
     csurf({
