@@ -8,37 +8,47 @@ const cookieParser = require('cookie-parser');
 const routes = require('./routes');
 const { ValidationError } = require('sequelize');
 
-
-
 const { environment } = require('./config');
 const isProduction = environment === 'production';
 
 const app = express();
 
-// Middleware setup
+// Standard middleware 
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
-app.use(routes);
 
-
-// Security middleware
+//Security middleware 
 if (!isProduction) {
   app.use(cors());
 }
+
 app.use(helmet.crossOriginEmbedderPolicy());
 
 app.use(
-    csurf({
-        cookie: {
-            secure: isProduction,
-            sameSite: isProduction ? 'None' : 'Lax',
-            httpOnly: true
-        }
-    })
-)
+  csurf({
+    cookie: {
+      secure: isProduction,
+      sameSite: isProduction ? 'None' : 'Lax',
+      httpOnly: true
+    }
+  })
+);
+
+// Routes
+app.use(routes);
+
+// 404 handler
+app.use((_req, _res, next) => {
+  const err = new Error("The requested resource couldn't be found.");
+  err.title = "Resource Not Found";
+  err.errors = { message: "The requested resource couldn't be found." };
+  err.status = 404;
+  next(err);
+});
+
+//Sequelize validation error formatter
 app.use((err, _req, _res, next) => {
-  // check if error is a Sequelize error:
   if (err instanceof ValidationError) {
     let errors = {};
     for (let error of err.errors) {
@@ -49,6 +59,8 @@ app.use((err, _req, _res, next) => {
   }
   next(err);
 });
+
+//Final error handler
 app.use((err, _req, res, _next) => {
   res.status(err.status || 500);
   console.error(err);
@@ -59,18 +71,5 @@ app.use((err, _req, res, _next) => {
     stack: isProduction ? null : err.stack
   });
 });
-
-
-
-
-app.use((_req, _res, next) => {
-  const err = new Error("The requested resource couldn't be found.");
-  err.title = "Resource Not Found";
-  err.errors = { message: "The requested resource couldn't be found." };
-  err.status = 404;
-  next(err);
-});
-
-
 
 module.exports = app;
