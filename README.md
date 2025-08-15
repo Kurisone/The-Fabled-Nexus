@@ -184,7 +184,6 @@ Scryfall uses a 128-but Unique Identifier. In schema - it is referenced as 'uuid
 
 -----------------------------
 
-##
 
 ## Functionality
 
