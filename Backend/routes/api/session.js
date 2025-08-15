@@ -13,7 +13,7 @@ const router = express.Router();
 
 
 
-
+// Log in
 router.post(
   '/',
   async (req, res, next) => {
@@ -50,6 +50,15 @@ router.post(
   }
 );
 
+
+// Log out
+router.delete(
+  '/',
+  (_req, res) => {
+    res.clearCookie('token');
+    return res.json({ message: 'success' });
+  }
+);
 
 
 
