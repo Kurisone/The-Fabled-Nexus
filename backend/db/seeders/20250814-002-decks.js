@@ -14,13 +14,15 @@ module.exports = {
         userId: 1,
         title: 'Mono Green Stompy',
         format: 'Commander',
-        description: 'Big creatures and ramp spells.'
+        description: 'Big creatures and ramp spells.',
+        coverImage: 'default.jpg' // Placeholder, change later
       },
       {
         userId: 2,
         title: 'Izzet Spellslinger',
         format: 'Modern',
-        description: 'Lots of instants and sorceries.'
+        description: 'Lots of instants and sorceries.',
+        coverImage: 'default.jpg' // Placeholder, change later
       }
     ], { validate: true });
   },

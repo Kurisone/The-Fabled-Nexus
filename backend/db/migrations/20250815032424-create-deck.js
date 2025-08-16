@@ -27,6 +27,11 @@ module.exports = {
         type: Sequelize.TEXT,
         allowNull: true
       },
+      coverImage: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        defaultValue: 'default.jpg'
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

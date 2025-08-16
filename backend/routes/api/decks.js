@@ -86,13 +86,14 @@ router.get('/:id', async (req, res) => {
 
 // Create deck
 router.post('/', requireAuth, async (req, res) => {
-  const { title, format, description } = req.body;
+  const { title, format, description, coverImage } = req.body;
   try {
     const newDeck = await Deck.create({
       userId: req.user.id,
       title,
       format,
-      description
+      description,
+      coverImage: coverImage || 'default.jpg' //default, change later
     });
     res.status(201).json(newDeck);
   } catch (err) {
@@ -104,7 +105,7 @@ router.post('/', requireAuth, async (req, res) => {
 // Update deck
 router.put('/:id', requireAuth, async (req, res) => {
   const { id } = req.params;
-  const { title, format, description } = req.body;
+  const { title, format, description, coverImage } = req.body;
 
   try {
     const deck = await Deck.findByPk(id);
@@ -116,6 +117,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     deck.title = title !== undefined ? title : deck.title;
     deck.format = format !== undefined ? format : deck.format;
     deck.description = description !== undefined ? description : deck.description;
+    deck.coverImage = coverImage !== undefined ? coverImage : deck.coverImage;
 
     await deck.save();
     res.json(deck);
