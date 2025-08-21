@@ -37,14 +37,26 @@ router.post('/', requireAuth, async (req, res) => {
   try {
     const { scryfallCardId, quantity } = req.body;
 
-    const newCard = await UserCard.create({
-      userId: req.user.id,
-      scryfallCardId,
-      quantity: quantity || 1
+    // Check if card already exists for this user
+    let userCard = await UserCard.findOne({
+      where: { userId: req.user.id, scryfallCardId }
     });
 
+    if (userCard) {
+      // Increment quantity
+      userCard.quantity += quantity || 1;
+      await userCard.save();
+    } else {
+      // Create new entry
+      userCard = await UserCard.create({
+        userId: req.user.id,
+        scryfallCardId,
+        quantity: quantity || 1
+      });
+    }
+
     res.status(201).json({
-      ...newCard.toJSON(),
+      ...userCard.toJSON(),
       scryfall: await fetchScryfallCard(scryfallCardId)
     });
   } catch (err) {
@@ -52,7 +64,6 @@ router.post('/', requireAuth, async (req, res) => {
     res.status(500).json({ message: 'Unable to add card' });
   }
 });
-
 // Update a card in the authenticated user's collection
 router.put('/:id', requireAuth, async (req, res) => {
   try {
@@ -62,10 +73,21 @@ router.put('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ message: 'Card not found' });
     }
 
-    if (req.body.quantity !== undefined) {
-      card.quantity = req.body.quantity;
-      await card.save();
+    const { quantity, delta } = req.body;
+
+    if (quantity !== undefined) {
+      card.quantity = quantity;
+    } else if (delta !== undefined) {
+      card.quantity += delta;
     }
+
+    // Prevent quantity from going below 1
+    if (card.quantity < 1) {
+      await card.destroy();
+      return res.status(204).end(); // Card removed from collection
+    }
+
+    await card.save();
 
     res.json({
       ...card.toJSON(),
