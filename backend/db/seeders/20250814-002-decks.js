@@ -1,7 +1,5 @@
 'use strict';
 
-const { Deck } = require('../models');
-
 let options = {};
 if (process.env.NODE_ENV === 'production') {
   options.schema = process.env.SCHEMA;
@@ -9,22 +7,23 @@ if (process.env.NODE_ENV === 'production') {
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await Deck.bulkCreate([
+    options.tableName = 'Decks';
+    return queryInterface.bulkInsert(options, [
       {
         userId: 1,
         title: 'Mono Green Stompy',
         format: 'Commander',
         description: 'Big creatures and ramp spells.',
-        coverImage: 'default.jpg' // Placeholder, change later
+        coverImage: 'default.jpg',
       },
       {
         userId: 2,
         title: 'Izzet Spellslinger',
         format: 'Modern',
         description: 'Lots of instants and sorceries.',
-        coverImage: 'default.jpg' // Placeholder, change later
+        coverImage: 'default.jpg',
       }
-    ], { validate: true });
+    ]);
   },
 
   async down(queryInterface, Sequelize) {

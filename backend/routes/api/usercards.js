@@ -1,6 +1,6 @@
 // routes/api/usercards.js
 const express = require('express');
-const fetch = require('node-fetch');
+const fetch = require('../../utils/fetch');
 const { requireAuth } = require('../../utils/auth');
 const { UserCard } = require('../../db/models');
 

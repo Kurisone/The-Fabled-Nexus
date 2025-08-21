@@ -1,48 +1,47 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const { check } = require('express-validator');
-const { handleValidationErrors } = require('../../utils/validation');
-const { setTokenCookie } = require('../../utils/auth');
-const { User } = require('../../db/models');
+const express = require("express");
+const bcrypt = require("bcryptjs");
+const { check } = require("express-validator");
+const { handleValidationErrors } = require("../../utils/validation");
+const { setTokenCookie } = require("../../utils/auth");
+const { User } = require("../../db/models");
 
 const router = express.Router();
 
+// Validation middleware
 const validateSignup = [
-  check('email')
+  check("email")
     .exists({ checkFalsy: true })
     .isEmail()
-    .withMessage('Please provide a valid email.'),
-  check('username')
+    .withMessage("Please provide a valid email."),
+  check("username")
     .exists({ checkFalsy: true })
     .isLength({ min: 4 })
-    .withMessage('Please provide a username with at least 4 characters.')
+    .withMessage("Please provide a username with at least 4 characters.")
     .not()
     .isEmail()
-    .withMessage('Username cannot be an email.'),
-  check('password')
+    .withMessage("Username cannot be an email."),
+  check("password")
     .exists({ checkFalsy: true })
     .isLength({ min: 6 })
-    .withMessage('Password must be 6 characters or more.'),
-  handleValidationErrors
+    .withMessage("Password must be 6 characters or more."),
+  handleValidationErrors,
 ];
 
 // Sign up
-router.post('/', validateSignup, async (req, res) => {
+router.post("/", validateSignup, async (req, res) => {
   const { email, password, username, firstName, lastName } = req.body;
 
   try {
-    // Check for existing email or username
-    const existingUser = await User.findOne({
-      where: { email }
-    });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email already in use' });
+    // Check for existing email
+    const existingEmail = await User.findOne({ where: { email } });
+    if (existingEmail) {
+      return res.status(400).json({ email: "Email already in use" });
     }
-    const existingUsername = await User.findOne({
-      where: { username }
-    });
+
+    // Check for existing username
+    const existingUsername = await User.findOne({ where: { username } });
     if (existingUsername) {
-      return res.status(400).json({ message: 'Username already in use' });
+      return res.status(400).json({ username: "Username already in use" });
     }
 
     // Hash password
@@ -54,7 +53,7 @@ router.post('/', validateSignup, async (req, res) => {
       username,
       firstName,
       lastName,
-      hashedPassword
+      hashedPassword, 
     });
 
     const safeUser = {
@@ -62,16 +61,15 @@ router.post('/', validateSignup, async (req, res) => {
       email: user.email,
       username: user.username,
       firstName: user.firstName,
-      lastName: user.lastName
+      lastName: user.lastName,
     };
 
     await setTokenCookie(res, safeUser);
 
     return res.status(201).json({ user: safeUser });
-
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Unable to register user' });
+    return res.status(500).json({ message: "Unable to register user" });
   }
 });
 

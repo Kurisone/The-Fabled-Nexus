@@ -1,6 +1,6 @@
 // routes/api/decks.js
 const express = require('express');
-const fetch = require('node-fetch');
+const fetch = require('../../utils/fetch');
 const { requireAuth } = require('../../utils/auth');
 const { Deck, DeckCard, Comment, User } = require('../../db/models');
 
