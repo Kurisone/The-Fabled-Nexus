@@ -4,7 +4,7 @@ const express = require('express');
 // const { Op } = require('sequelize');
 const { requireAuth } = require('../../utils/auth');
 const { Deck, DeckCard } = require('../../db/models');
-const { getCardData } = require('../../utils/scryfallApi');
+const { getCardById } = require('../../utils/scryfallApi');
 
 const router = express.Router();
 
@@ -15,16 +15,34 @@ function isBasicLand(name) {
 }
 
 // GET all decks for logged-in user
-router.get('/', requireAuth, async (req, res) => {
+router.get('/user/:userId', requireAuth, async (req, res) => {
+  const { userId } = req.params;
   try {
     const decks = await Deck.findAll({
-      where: { userId: req.user.id },
-      include: { model: DeckCard }
+      where: { userId },
+      include: [
+        {
+          model: DeckCard,
+          as: 'DeckCards',
+          attributes: ['id', 'deckId', 'scryfallCardId', 'name', 'imageUrl', 'quantity', 'isCommanderCard'],
+        },
+      ],
     });
-    res.json(decks);
+
+    // Set a random card as cover if not already set
+    const decksWithCovers = decks.map((deck) => {
+      const jsonDeck = deck.toJSON();
+      if ((!jsonDeck.coverImage || jsonDeck.coverImage === 'default.jpg') && jsonDeck.DeckCards.length > 0) {
+        const randomCard = jsonDeck.DeckCards[Math.floor(Math.random() * jsonDeck.DeckCards.length)];
+        jsonDeck.coverImage = randomCard.imageUrl || 'default.jpg';
+      }
+      return jsonDeck;
+    });
+
+    res.json(decksWithCovers);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: 'Unable to fetch decks' });
+    res.status(500).json({ error: 'Failed to fetch decks' });
   }
 });
 
@@ -39,53 +57,53 @@ router.get('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ message: 'Deck not found' });
     }
 
-    // ---- Validation logic ----
+    // Determine dynamic cover image: first creature card's art
+    const creatureCard = deck.DeckCards.find(dc => dc.type_line?.includes("Creature")) || deck.DeckCards[0];
+    let coverImage = deck.coverImage; // fallback default
+
+    if (creatureCard) {
+      const cardData = await getCardById(creatureCard.scryfallCardId);
+      coverImage = cardData.card_faces?.[0]?.image_uris?.art_crop || coverImage;
+    }
+
+    const deckWithCover = {
+      ...deck.toJSON(),
+      coverImage
+    };
+
+    // ---- Validation logic (Commander, singleton, etc.) ----
     let errors = [];
     let warnings = [];
 
     if (deck.format === 'Commander') {
-      // Commander requirement
       const commanderCards = deck.DeckCards.filter(dc => dc.isCommanderCard);
-      if (commanderCards.length === 0) {
-        errors.push('Commander deck must have exactly 1 commander.');
-      } else if (commanderCards.length > 1) {
-        errors.push('Commander deck can only have 1 commander.');
-      }
+      if (commanderCards.length === 0) errors.push('Commander deck must have exactly 1 commander.');
+      else if (commanderCards.length > 1) errors.push('Commander deck can only have 1 commander.');
 
-      // Singleton rule
       const seen = {};
       for (let dc of deck.DeckCards) {
-        const cardData = await getCardData(dc.scryfallCardId);
+        const cardData = await getCardById(dc.scryfallCardId);
         const cardName = cardData.name;
 
         if (!isBasicLand(cardName)) {
-          if (seen[cardName]) {
-            errors.push(`Duplicate copy of ${cardName} not allowed in Commander.`);
-          }
-          if (dc.quantity > 1) {
-            errors.push(`${cardName} has ${dc.quantity} copies, only 1 allowed in Commander.`);
-          }
+          if (seen[cardName]) errors.push(`Duplicate copy of ${cardName} not allowed in Commander.`);
+          if (dc.quantity > 1) errors.push(`${cardName} has ${dc.quantity} copies, only 1 allowed in Commander.`);
           seen[cardName] = true;
         }
       }
 
-      // Card count
       const totalCards = deck.DeckCards.reduce((sum, dc) => sum + dc.quantity, 0);
-      if (totalCards !== 100) {
-        warnings.push(`Commander decks should have exactly 100 cards (currently ${totalCards}).`);
-      }
+      if (totalCards !== 100) warnings.push(`Commander decks should have exactly 100 cards (currently ${totalCards}).`);
     }
 
-    const deckWithValidation = {
-      ...deck.toJSON(),
+    res.json({
+      ...deckWithCover,
       validation: {
         errors,
         warnings,
         isValid: errors.length === 0
       }
-    };
-
-    res.json(deckWithValidation);
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Unable to fetch deck' });
@@ -95,10 +113,11 @@ router.get('/:id', requireAuth, async (req, res) => {
 // CREATE a new deck
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { name, format } = req.body;
+    const { name, title, format } = req.body;
     const newDeck = await Deck.create({
       userId: req.user.id,
       name,
+      title,
       format
     });
     res.status(201).json(newDeck);
@@ -117,8 +136,11 @@ router.put('/:id', requireAuth, async (req, res) => {
       return res.status(404).json({ message: 'Deck not found' });
     }
 
-    const { name, format } = req.body;
+    const { name, title, description, format } = req.body;
+
     if (name !== undefined) deck.name = name;
+    if (title !== undefined) deck.title = title;
+    if (description !== undefined) deck.description = description;
     if (format !== undefined) deck.format = format;
 
     await deck.save();
@@ -171,7 +193,7 @@ router.get('/:id/validate', requireAuth, async (req, res) => {
 
       const seen = {};
       for (let dc of deck.DeckCards) {
-        const cardData = await getCardData(dc.scryfallCardId);
+        const cardData = await getCardById(dc.scryfallCardId);
         const cardName = cardData.name;
 
         if (!isBasicLand(cardName)) {

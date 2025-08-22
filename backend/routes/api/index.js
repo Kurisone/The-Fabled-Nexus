@@ -1,28 +1,26 @@
 const router = require('express').Router();
 const { restoreUser } = require("../../utils/auth.js");
 const sessionRouter = require('./session.js');
-const usersRouter = require('./users.js');
 const { User } = require('../../db/models/index.js');
 const userCardsRouter = require('./usercards.js');
 const decksRouter = require('./decks.js');
 const deckCardsRouter = require('./deckcards.js');
 const friendshipsRouter = require('./friendships.js');
-const commentsRouter = require('./comments.js'); // ✅ Our new route
+const commentsRouter = require('./comments.js'); 
 
 // Route mounting
-router.use('/user-cards', userCardsRouter);
+router.use('/usercards', userCardsRouter);
 router.use('/decks', decksRouter);
-router.use('/deck-cards', deckCardsRouter);
+router.use('/deckcards', deckCardsRouter);
 router.use('/friendships', friendshipsRouter);
-router.use('/comments', commentsRouter); // ✅ Added here
+router.use('/comments', commentsRouter); 
 router.use('/session', sessionRouter);
 
 // Middleware to restore user
 router.use(restoreUser);
-router.use('/users', usersRouter);
 
 // CSRF restore endpoint
-router.get("/api/csrf/restore", (req, res) => {
+router.get("/csrf/restore", (req, res) => {
   const csrfToken = req.csrfToken();
   res.cookie("XSRF-TOKEN", csrfToken);
   res.status(200).json({

@@ -1,4 +1,3 @@
-// routes/api/usercards.js
 const express = require('express');
 const fetch = require('../../utils/fetch');
 const { requireAuth } = require('../../utils/auth');
@@ -6,10 +5,17 @@ const { UserCard } = require('../../db/models');
 
 const router = express.Router();
 
+// Safe Scryfall fetch
 async function fetchScryfallCard(id) {
-  const res = await fetch(`https://api.scryfall.com/cards/${id}`);
-  if (!res.ok) throw new Error(`Scryfall fetch failed for ID: ${id}`);
-  return res.json();
+  if (!id) return {}; // return empty object if no ID
+  try {
+    const res = await fetch(`https://api.scryfall.com/cards/${id}`);
+    if (!res.ok) return {};
+    return res.json();
+  } catch (err) {
+    console.error(`Error fetching Scryfall card ${id}:`, err);
+    return {};
+  }
 }
 
 // GET all cards in the authenticated user's collection
@@ -17,13 +23,21 @@ router.get('/', requireAuth, async (req, res) => {
   try {
     const userCards = await UserCard.findAll({
       where: { userId: req.user.id },
-      order: [['id', 'ASC']]
+      order: [['id', 'ASC']],
     });
 
-    const results = await Promise.all(userCards.map(async (card) => ({
-      ...card.toJSON(),
-      scryfall: await fetchScryfallCard(card.scryfallCardId)
-    })));
+    const results = await Promise.all(
+      userCards.map(async (card) => {
+        const scryfallData = await fetchScryfallCard(card.scryfallCardId);
+        return {
+          id: card.id,
+          scryfallCardId: card.scryfallCardId,
+          quantity: card.quantity,
+          name: scryfallData.name || 'Unknown Card',
+          scryfall: scryfallData,
+        };
+      })
+    );
 
     res.json(results);
   } catch (err) {
@@ -37,33 +51,36 @@ router.post('/', requireAuth, async (req, res) => {
   try {
     const { scryfallCardId, quantity } = req.body;
 
-    // Check if card already exists for this user
     let userCard = await UserCard.findOne({
-      where: { userId: req.user.id, scryfallCardId }
+      where: { userId: req.user.id, scryfallCardId },
     });
 
     if (userCard) {
-      // Increment quantity
       userCard.quantity += quantity || 1;
       await userCard.save();
     } else {
-      // Create new entry
       userCard = await UserCard.create({
         userId: req.user.id,
         scryfallCardId,
-        quantity: quantity || 1
+        quantity: quantity || 1,
       });
     }
 
+    const scryfallData = await fetchScryfallCard(scryfallCardId);
+
     res.status(201).json({
-      ...userCard.toJSON(),
-      scryfall: await fetchScryfallCard(scryfallCardId)
+      id: userCard.id,
+      scryfallCardId: userCard.scryfallCardId,
+      quantity: userCard.quantity,
+      name: scryfallData.name || 'Unknown Card',
+      scryfall: scryfallData,
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Unable to add card' });
   }
 });
+
 // Update a card in the authenticated user's collection
 router.put('/:id', requireAuth, async (req, res) => {
   try {
@@ -74,24 +91,24 @@ router.put('/:id', requireAuth, async (req, res) => {
     }
 
     const { quantity, delta } = req.body;
+    if (quantity !== undefined) card.quantity = quantity;
+    else if (delta !== undefined) card.quantity += delta;
 
-    if (quantity !== undefined) {
-      card.quantity = quantity;
-    } else if (delta !== undefined) {
-      card.quantity += delta;
-    }
-
-    // Prevent quantity from going below 1
     if (card.quantity < 1) {
       await card.destroy();
-      return res.status(204).end(); // Card removed from collection
+      return res.status(204).end();
     }
 
     await card.save();
 
+    const scryfallData = await fetchScryfallCard(card.scryfallCardId);
+
     res.json({
-      ...card.toJSON(),
-      scryfall: await fetchScryfallCard(card.scryfallCardId)
+      id: card.id,
+      scryfallCardId: card.scryfallCardId,
+      quantity: card.quantity,
+      name: scryfallData.name || 'Unknown Card',
+      scryfall: scryfallData,
     });
   } catch (err) {
     console.error(err);

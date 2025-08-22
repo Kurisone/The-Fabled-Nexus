@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
     class Deck extends Model {
         static associate(models) {
             Deck.belongsTo(models.User, { foreignKey: 'userId' });
-            Deck.hasMany(models.DeckCard, { foreignKey: 'deckId', onDelete: 'CASCADE' });
+            Deck.hasMany(models.DeckCard, { foreignKey: 'deckId', as: 'DeckCards', onDelete: 'CASCADE' });
             Deck.hasMany(models.Comment, { foreignKey: 'deckId', onDelete: 'CASCADE' });
         }
     }

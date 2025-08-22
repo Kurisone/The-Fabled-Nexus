@@ -9,21 +9,24 @@ const routes = require('./routes');
 const { ValidationError } = require('sequelize');
 
 const { environment } = require('./config');
+const { restoreUser } = require('./utils/auth');   // ⬅️ import restoreUser
 const isProduction = environment === 'production';
 
 const app = express();
 
-// Standard middleware 
+//middleware 
 app.use(morgan('dev'));
-app.use(express.json());
 app.use(cookieParser());
+app.use(express.json());
 
-//Security middleware 
-if (!isProduction) {
-  app.use(cors());
-}
+app.use(restoreUser);
 
+// Security middleware 
 app.use(helmet.crossOriginEmbedderPolicy());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 
 app.use(
   csurf({
@@ -35,7 +38,6 @@ app.use(
   })
 );
 
-// Routes
 app.use(routes);
 
 // 404 handler
@@ -47,7 +49,6 @@ app.use((_req, _res, next) => {
   next(err);
 });
 
-//Sequelize validation error formatter
 app.use((err, _req, _res, next) => {
   if (err instanceof ValidationError) {
     let errors = {};
@@ -60,7 +61,6 @@ app.use((err, _req, _res, next) => {
   next(err);
 });
 
-//Final error handler
 app.use((err, _req, res, _next) => {
   res.status(err.status || 500);
   console.error(err);
