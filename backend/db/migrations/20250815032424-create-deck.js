@@ -1,9 +1,9 @@
 'use strict';
 /** @type {import('sequelize-cli').Migration} */
 let options = {};
-if (process.env.NODE_ENV === 'production') {
-  options.schema = process.env.SCHEMA; // e.g., "the-fabled-nexus"
-}
+// if (process.env.NODE_ENV === 'production') {
+//   options.schema = process.env.SCHEMA; // e.g., "the-fabled-nexus"
+// }
 module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('Decks', {
@@ -51,6 +51,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Decks');
+    await queryInterface.dropTable(options, 'Decks');
   }
 };
