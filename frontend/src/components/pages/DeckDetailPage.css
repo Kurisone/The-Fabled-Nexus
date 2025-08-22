@@ -1,0 +1,114 @@
+.deck-page {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 1rem 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+.deck-title {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.deck-format,
+.deck-description {
+  margin: 0.5rem 0;
+}
+
+.deck-cover {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  display: block;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.deck-error {
+  color: red;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.deck-buttons {
+  margin-bottom: 1rem;
+}
+
+.deck-buttons button {
+  margin-right: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.edit-button { background-color: #4caf50; color: white; }
+.delete-button { background-color: #f44336; color: white; }
+.back-button { background-color: #2196f3; color: white; }
+
+.add-cards-section {
+  margin: 2rem 0;
+}
+
+.cards-list,
+.commander-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+}
+
+.card-item {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.card-image {
+  width: 100%;
+  max-width: 150px;
+  object-fit: contain; /* show full card */
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.card-name {
+  font-weight: 500;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.card-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.card-button {
+  padding: 0.3rem 0.5rem;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+}
+
+.card-button.remove { background-color: #f44336; color: white; }
+.card-button.increment { background-color: #4caf50; color: white; }
+.card-button.decrement { background-color: #ff9800; color: white; }
+.card-button.commander { background-color: #2196f3; color: white; }
+
+.commander-section {
+  margin-bottom: 2rem;
+}
+
+.commander-section h3 {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}

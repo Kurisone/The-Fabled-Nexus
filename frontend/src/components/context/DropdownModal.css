@@ -1,0 +1,123 @@
+/* Dropdown / Modal Container */
+.dropdown, .profile-dropdown, #modal-content {
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  padding: 0.5rem 0;
+  z-index: 100;
+  width: 220px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Dropdown Items */
+.menu-item, .dropdown-item button {
+  display: block;
+  width: 100%;
+  padding: 0.45rem 1rem;
+  text-decoration: none;
+  color: #333;
+  font-size: 0.95rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-align: left;
+  transition: background 0.2s, color 0.2s;
+}
+
+.menu-item:hover, .dropdown-item button:hover {
+  background-color: #f4f4f4;
+  color: #1a73e8;
+}
+
+/* Menu header */
+.menu-header {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+  color: #555;
+}
+
+/* Divider */
+.menu-divider {
+  height: 1px;
+  background-color: #eee;
+  margin: 0.3rem 0;
+}
+
+/* Profile Button / NavBar trigger */
+.profile-button, .nav-button {
+  display: flex;
+  align-items: center;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.profile-button:hover, .nav-button:hover {
+  background-color: #f4f4f4;
+}
+
+/* Hamburger icon inside profile button */
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 18px;
+  height: 14px;
+  margin-right: 8px;
+}
+
+.hamburger-icon span {
+  display: block;
+  height: 2px;
+  background-color: #333;
+  border-radius: 1px;
+}
+
+/* Username text inside profile button */
+.username, .nav-user {
+  font-size: 0.9rem;
+  color: #333;
+  margin-left: 4px;
+}
+
+/* Logout Button styling */
+.logout-button {
+  color: #d93025;
+}
+
+.logout-button:hover {
+  background-color: #ffeaea;
+}
+
+/* Modal Background */
+#modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 200;
+}
+
+#modal-background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+}
+
+#modal-content {
+  position: relative;
+  margin: 5% auto;
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+  max-width: 450px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}

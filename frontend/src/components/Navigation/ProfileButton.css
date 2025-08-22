@@ -1,0 +1,105 @@
+.profile-button-container {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-button {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.profile-button:hover {
+  background-color: #f4f4f4;
+}
+
+.menu-open {
+  background-color: #f0f0f0;
+}
+
+.hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 18px;
+  height: 14px;
+  margin-right: 8px;
+}
+
+.hamburger-icon span {
+  display: block;
+  height: 2px;
+  background-color: #333;
+  border-radius: 1px;
+}
+
+.username {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  width: 200px;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.5rem 0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  z-index: 100;
+}
+
+.menu-header {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid #eee;
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: #eee;
+  margin: 0.3rem 0;
+}
+
+.dropdown-item {
+  list-style: none;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.4rem 1rem;
+  color: #333;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.menu-item:hover {
+  background-color: #f9f9f9;
+  color: #1a73e8;
+}
+
+.logout-button {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0.4rem 1rem;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #d93025;
+  transition: background 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #ffeaea;
+}
