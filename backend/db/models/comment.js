@@ -37,7 +37,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'Comment'
+      modelName: 'Comment',
+      schema: process.env.NODE_ENV === 'production' ? process.env.SCHEMA : undefined,
+
     }
   );
 
