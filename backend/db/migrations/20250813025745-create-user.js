@@ -1,9 +1,9 @@
 'use strict';
 /** @type {import('sequelize-cli').Migration} */
 let options = {};
-// if (process.env.NODE_ENV === 'production') {
-//   options.schema = process.env.SCHEMA;  // define the schema in production
-// }
+if (process.env.NODE_ENV === 'production') {
+  options.schema = process.env.SCHEMA;  // define the schema in production
+}
 
 module.exports = {
   async up(queryInterface, Sequelize) {
