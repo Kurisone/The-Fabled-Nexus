@@ -2,14 +2,15 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "index.js",
-"scripts": {
-  "install": "npm install --prefix backend",
-  "dev:backend": "npm start --prefix backend",
-  "sequelize": "npx sequelize",
-  "sequelize-cli": "npx sequelize-cli",
-  "start": "npm start --prefix backend",
-  "build": "npm run build --prefix backend"
-},  
+  "scripts": {
+    "sequelize": "sequelize",
+    "sequelize-cli": "sequelize-cli",
+    "start": "per-env",
+    "start:development": "nodemon ./bin/www",
+    "start:production": "node ./bin/www",
+    "build": "node psql-setup-script.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
