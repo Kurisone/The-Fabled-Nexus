@@ -9,7 +9,7 @@
   "sequelize-cli": "npx sequelize-cli",
   "start": "npm start --prefix backend",
   "build": "npm run build --prefix backend"
-},
+},  
   "keywords": [],
   "author": "",
   "license": "ISC",
