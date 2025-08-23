@@ -8,36 +8,42 @@ export default function SignupForm() {
   const dispatch = useDispatch();
   const { closeModal } = useModal();
   const sessionUser = useSelector(state => state.session.user);
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState([]);
 
   if (sessionUser) return <p>You are already signed up and logged in as {sessionUser.username}</p>;
 
+  const handleErrors = (data) => {
+    if (!data) return;
+    if (Array.isArray(data)) setErrors(data);
+    else if (typeof data === "object") setErrors(Object.values(data));
+    else setErrors([String(data)]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrors({});
-    try {
-      await dispatch(signup({ firstName, lastName, email, username, password }));
-      closeModal();
-    } catch (res) {
-      const data = await res.json();
-      if (data?.errors) setErrors(data.errors);
-    }
+    setErrors([]);
+    const data = await dispatch(signup({ firstName, lastName, email, username, password }));
+    if (data?.errors) handleErrors(data.errors);
+    else closeModal();
   };
 
   return (
     <form onSubmit={handleSubmit} className="auth-form">
       <h2 className="form-title">Sign Up</h2>
 
-      <ul className="error-list">
-        {Object.values(errors).map((err, i) => (
-          <li key={i} className="error">{err}</li>
-        ))}
-      </ul>
+      {errors.length > 0 && (
+        <ul className="error-list">
+          {errors.map((err, i) => (
+            <li key={i} className="error">{err}</li>
+          ))}
+        </ul>
+      )}
 
       <input
         type="text"

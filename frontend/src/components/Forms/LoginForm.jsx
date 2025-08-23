@@ -14,43 +14,42 @@ function LoginForm() {
 
   if (sessionUser) return null;
 
+  const handleErrors = (data) => {
+    if (!data) return;
+    // Convert object errors or array errors into an array
+    if (Array.isArray(data)) setErrors(data);
+    else if (typeof data === "object") setErrors(Object.values(data));
+    else setErrors([String(data)]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors([]);
-    try {
-      await dispatch(login({ credential, password }));
-      closeModal();
-    } catch (res) {
-      const data = await res.json();
-      if (data?.errors) setErrors(data.errors);
-    }
+    const data = await dispatch(login({ credential, password }));
+    if (data?.errors) handleErrors(data.errors);
+    else closeModal();
   };
 
   const handleDemoLogin = async () => {
     setErrors([]);
-    try {
-      await dispatch(
-        login({
-          credential: "demo@user.io",
-          password: "password",
-        })
-      );
-      closeModal();
-    } catch (res) {
-      const data = await res.json();
-      if (data?.errors) setErrors(data.errors);
-    }
+    const data = await dispatch(
+      login({ credential: "demo@user.io", password: "password" })
+    );
+    if (data?.errors) handleErrors(data.errors);
+    else closeModal();
   };
 
   return (
     <form onSubmit={handleSubmit} className="auth-form">
       <h2 className="form-title">Log In</h2>
 
-      <ul className="error-list">
-        {errors.map((error, idx) => (
-          <li key={idx} className="error">{error}</li>
-        ))}
-      </ul>
+      {errors.length > 0 && (
+        <ul className="error-list">
+          {errors.map((error, idx) => (
+            <li key={idx} className="error">{error}</li>
+          ))}
+        </ul>
+      )}
 
       <label className="input-label">
         Username or Email
