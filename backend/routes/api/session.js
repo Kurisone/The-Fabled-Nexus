@@ -47,10 +47,10 @@ router.post('/signup', validateSignup, async (req, res) => {
 
   try {
     const existingEmail = await User.findOne({ where: { email } });
-    if (existingEmail) return res.status(400).json({ email: 'Email already in use' });
+    if (existingEmail) return res.status(400).json({ errors: ['Email already in use'] });
 
     const existingUsername = await User.findOne({ where: { username } });
-    if (existingUsername) return res.status(400).json({ username: 'Username already in use' });
+    if (existingUsername) return res.status(400).json({ errors: ['Username already in use'] });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -74,40 +74,43 @@ router.post('/signup', validateSignup, async (req, res) => {
     return res.status(201).json({ user: safeUser });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Unable to register user' });
+    return res.status(500).json({ errors: ['Unable to register user'] });
   }
 });
 
 // Login
-router.post('/', validateLogin, async (req, res, next) => {
+router.post('/', validateLogin, async (req, res) => {
   const { credential, password } = req.body;
 
-  const user = await User.unscoped().findOne({
-    where: {
-      [Op.or]: {
-        username: credential,
-        email: credential
+  try {
+    const user = await User.unscoped().findOne({
+      where: {
+        [Op.or]: {
+          username: credential,
+          email: credential
+        }
       }
+    });
+
+    if (!user || !bcrypt.compareSync(password, user.hashedPassword.toString())) {
+      return res.status(401).json({ errors: ['The provided credentials were invalid.'] });
     }
-  });
 
-  if (!user || !bcrypt.compareSync(password, user.hashedPassword.toString())) {
-    const err = new Error('Login failed');
-    err.status = 401;
-    err.errors = { credential: 'The provided credentials were invalid.' };
-    return next(err);
+    const safeUser = {
+      id: user.id,
+      email: user.email,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName
+    };
+
+    await setTokenCookie(res, safeUser);
+    return res.json({ user: safeUser });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ errors: ['An unexpected error occurred during login.'] });
   }
-
-  const safeUser = {
-    id: user.id,
-    email: user.email,
-    username: user.username,
-    firstName: user.firstName,
-    lastName: user.lastName
-  };
-
-  await setTokenCookie(res, safeUser);
-  return res.json({ user: safeUser });
 });
 
 // Logout

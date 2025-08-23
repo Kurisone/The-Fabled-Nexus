@@ -1,0 +1,172 @@
+/* General Layout */
+.homepage {
+  font-family: 'Merriweather', serif;
+  background: linear-gradient(180deg, #faf7f2 0%, #e9e3d6 100%);
+  color: #1a1a1a;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.homepage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 3rem;
+  background: #242424;
+  color: #f5f5f5;
+}
+
+.logo-title {
+  max-width: 50%;
+}
+
+.site-title {
+  font-size: 2rem;
+  margin: 0;
+  color: #fff; /* brighter for contrast */
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+.site-subtitle {
+  font-size: 1rem;
+  margin-top: 0.25rem;
+  color: #e0e0e0; /* brighter subtitle */
+  text-shadow: 0.5px 0.5px 2px rgba(0, 0, 0, 0.5);
+}
+
+.homepage-nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  color: #fff; /* pure white for visibility */
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #ffd966; /* golden accent */
+}
+
+/* Hero Section */
+.hero {
+  background: url('/images/mtg-hero-bg.jpg') center/cover no-repeat;
+  color: #fff;
+  text-align: center;
+  padding: 5rem 2rem;
+}
+
+.hero-title {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.6);
+}
+
+.hero-description {
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn-primary {
+  background: #d8b13f;
+  color: #242424;
+}
+
+.btn-primary:hover {
+  background: #b89232;
+}
+
+.btn-secondary {
+  border: 2px solid #fff;
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Features */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  padding: 3rem;
+}
+
+.feature-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+  padding: 2rem;
+  text-align: center;
+}
+
+.feature-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* News */
+.news {
+  background: #f2efe9;
+  padding: 3rem;
+}
+
+.news-title {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.news-item {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.news-headline {
+  margin: 0 0 0.5rem 0;
+}
+
+.news-summary {
+  margin: 0 0 1rem 0;
+}
+
+.news-link {
+  color: #d8b13f;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.news-link:hover {
+  text-decoration: underline;
+}
+
+/* Footer */
+.homepage-footer {
+  background: #242424;
+  color: #aaa;
+  text-align: center;
+  padding: 1rem;
+}

@@ -32,6 +32,12 @@ function DeckDetailPage() {
     if (id) dispatch(fetchDeckCards(id));
   }, [dispatch, user, id]);
 
+  useEffect(() => {
+    if (!error) return;
+    const timer = setTimeout(() => setError(""), 3000);
+    return () => clearTimeout(timer);
+  }, [error]);
+
   if (!deck) return <p>Loading deck...</p>;
 
   const handleDeleteDeck = async () => {
@@ -39,11 +45,9 @@ function DeckDetailPage() {
     navigate("/decks");
   };
 
-  // Separate commander
   const commander = cards.find((c) => c.isCommanderCard);
   const normalCards = cards.filter((c) => !c.isCommanderCard);
 
-  // Determine deck cover image: commander first, then previous logic
   let deckCoverImage = commander?.imageUrl;
   if (!deckCoverImage && cards.length > 0) {
     const creatureCard = cards.find((card) =>
@@ -58,7 +62,6 @@ function DeckDetailPage() {
     }
   }
 
-  // Handle adding card with Commander singleton validation
   const handleAddCard = async (card) => {
     setError("");
 
@@ -69,8 +72,7 @@ function DeckDetailPage() {
           card.type_line?.includes("Creature"));
 
       if (isCommander) {
-        const hasCommander = cards.some((c) => c.isCommanderCard);
-        if (hasCommander) {
+        if (cards.some((c) => c.isCommanderCard)) {
           setError("Commander deck can only have 1 commander.");
           return;
         }
@@ -78,8 +80,7 @@ function DeckDetailPage() {
 
       const basicLandNames = ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes"];
       if (!basicLandNames.includes(card.name)) {
-        const existingCard = cards.find((c) => c.name === card.name);
-        if (existingCard) {
+        if (cards.some((c) => c.name === card.name)) {
           setError(`Singleton format: only 1 copy of ${card.name} allowed.`);
           return;
         }
@@ -113,13 +114,11 @@ function DeckDetailPage() {
         </button>
       </div>
 
-      {/* Search Bar */}
       <div className="add-cards-section">
         <h3>Add Cards</h3>
         <CardSearchForm deckId={id} onAddCard={handleAddCard} />
       </div>
 
-      {/* Commander Section */}
       {commander && (
         <div className="commander-section">
           <h3>Commander</h3>
@@ -136,7 +135,6 @@ function DeckDetailPage() {
         </div>
       )}
 
-      {/* Cards List */}
       <h3>Cards</h3>
       {normalCards.length === 0 ? (
         <p>No cards yet.</p>
@@ -153,14 +151,21 @@ function DeckDetailPage() {
                 >
                   Remove
                 </button>
+
                 <button
                   className="card-button increment"
-                  onClick={() =>
-                    dispatch(updateDeckCard(deck.id, card.id, card.quantity + 1))
-                  }
+                  onClick={() => {
+                    if (deck.format === "Commander") {
+                      setError(`Commander format allows only 1 copy of ${card.name}.`);
+                      return;
+                    }
+                    dispatch(updateDeckCard(deck.id, card.id, card.quantity + 1));
+                  }}
+                  disabled={deck.format === "Commander"}
                 >
                   +1
                 </button>
+
                 <button
                   className="card-button decrement"
                   onClick={() =>
@@ -170,6 +175,7 @@ function DeckDetailPage() {
                 >
                   -1
                 </button>
+
                 {deck.format === "Commander" && (
                   <button
                     className="card-button commander"

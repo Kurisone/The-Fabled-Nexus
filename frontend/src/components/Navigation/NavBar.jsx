@@ -4,25 +4,28 @@ import OpenModalButton from "../OpenModalButton/OpenModalButton";
 import LoginForm from "../Forms/LoginForm";
 import SignupForm from "../Forms/SignupForm";
 import { logout } from "../../store/session";
-import { useModal } from "../context/Modal"; // <-- import modal context
+import { useModal } from "../context/Modal";
+import logo from "../../assets/logo.png"; // make sure this file exists
 import "./NavBar.css";
 
 function NavBar() {
-  const user = useSelector(state => state.session.user);
+  const user = useSelector((state) => state.session.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { closeModal } = useModal(); // <-- get closeModal function
+  const { closeModal } = useModal();
 
   const handleLogout = async () => {
     await dispatch(logout());
-    closeModal();       // close any open modal first
-    navigate("/");      // then redirect to home page
+    closeModal();
+    navigate("/");
   };
 
   return (
     <nav className="navbar">
       <div className="nav-left">
-        <Link to="/" className="nav-link">Home</Link>
+        <Link to="/" className="nav-logo-link">
+          <img src={logo} alt="The Fabled Nexus" className="nav-logo" />
+        </Link>
         <Link to="/collection" className="nav-link">Collection</Link>
         <Link to="/decks" className="nav-link">Decks</Link>
       </div>

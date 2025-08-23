@@ -5,7 +5,7 @@ module.exports = {
     await queryInterface.addColumn('DeckCards', 'name', {
       type: Sequelize.STRING,
       allowNull: false,
-      defaultValue: ''   // required since column can’t be null on existing rows
+      defaultValue: ''  
     });
     await queryInterface.addColumn('DeckCards', 'imageUrl', {
       type: Sequelize.STRING,
