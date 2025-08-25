@@ -1,14 +1,11 @@
-// src/store/deckCards.js
 import { csrfFetch } from "./csrf";
 
-// Action Types
 const LOAD_DECK_CARDS = "deckCards/LOAD_DECK_CARDS";
 const ADD_DECK_CARD = "deckCards/ADD_DECK_CARD";
 const UPDATE_DECK_CARD = "deckCards/UPDATE_DECK_CARD";
 const REMOVE_DECK_CARD = "deckCards/REMOVE_DECK_CARD";
 const SET_COMMANDER_CARD = "deckCards/SET_COMMANDER_CARD";
 
-// Action Creators
 const loadDeckCards = (deckId, cards) => ({
     type: LOAD_DECK_CARDS,
     deckId,
@@ -39,19 +36,22 @@ const removeDeckCard = (deckId, cardId) => ({
     cardId,
 });
 
-// Thunks
+// Proxy helper
+const proxyUrl = (url) => url ? `/api/proxy-card-image?url=${encodeURIComponent(url)}` : null;
+
+const normalizeCard = (c) => ({
+    ...c,
+    imageUrl: proxyUrl(c.imageUrl || c.cardData?.image_uris?.normal),
+    images: c.card_faces
+        ? c.card_faces.map(face => proxyUrl(face.image_uris?.normal))
+        : [proxyUrl(c.imageUrl || c.cardData?.image_uris?.normal)],
+});
+
 export const fetchDeckCards = (deckId) => async (dispatch) => {
     const res = await csrfFetch(`/api/deckcards/${deckId}`);
     if (res.ok) {
         const data = await res.json();
-        const normalized = data.map((c) => ({
-            id: c.id,
-            name: c.name,
-            imageUrl: c.imageUrl || c.cardData?.image_uris?.normal || null,
-            quantity: c.quantity,
-            scryfallCardId: c.scryfallCardId,
-            isCommanderCard: c.isCommanderCard,
-        }));
+        const normalized = data.map(normalizeCard);
         dispatch(loadDeckCards(deckId, normalized));
         return normalized;
     }
@@ -65,10 +65,7 @@ export const addCardToDeck = (deckId, card) => async (dispatch) => {
 
     if (res.ok) {
         const data = await res.json();
-        const normalized = {
-            ...data,
-            imageUrl: data.imageUrl || data.cardData?.image_uris?.normal || null,
-        };
+        const normalized = normalizeCard(data);
         dispatch(addDeckCardAction(deckId, normalized));
         return normalized;
     }
@@ -81,7 +78,6 @@ export const setCommanderCard = (deckId, cardId) => async (dispatch, getState) =
 
     if (deck.format !== "Commander") return;
 
-    // Check if another commander exists
     const existingCommander = Object.values(deckCards).find((c) => c.isCommanderCard);
     if (existingCommander && existingCommander.id !== cardId) {
         return { error: "Deck already has a commander. Remove it first." };
@@ -99,24 +95,15 @@ export const setCommanderCard = (deckId, cardId) => async (dispatch, getState) =
     }
 
     const data = await res.json();
-    const normalized = {
-        ...data,
-        imageUrl: data.imageUrl || data.cardData?.image_uris?.normal || null,
-    };
+    const normalized = normalizeCard(data);
     dispatch(setCommanderCardAction(deckId, normalized));
     return normalized;
 };
 
 export const updateDeckCard = (deckId, id, quantityOrDelta) => async (dispatch) => {
-    let bodyData;
-
-    if (typeof quantityOrDelta === "object" && quantityOrDelta !== null) {
-        // already an object like { quantity: 2 } or { delta: 1 }
-        bodyData = quantityOrDelta;
-    } else {
-        // just a number, wrap it
-        bodyData = { quantity: quantityOrDelta };
-    }
+    const bodyData = typeof quantityOrDelta === "object" && quantityOrDelta !== null
+        ? quantityOrDelta
+        : { quantity: quantityOrDelta };
 
     const res = await csrfFetch(`/api/deckcards/${id}`, {
         method: "PUT",
@@ -131,26 +118,19 @@ export const updateDeckCard = (deckId, id, quantityOrDelta) => async (dispatch) 
 
     if (res.ok) {
         const data = await res.json();
-        const normalized = {
-            ...data,
-            imageUrl: data.imageUrl || data.cardData?.image_uris?.normal || null,
-        };
+        const normalized = normalizeCard(data);
         dispatch(updateDeckCardAction(deckId, normalized));
         return normalized;
     }
 };
 
 export const removeCardFromDeck = (deckId, id) => async (dispatch) => {
-    const res = await csrfFetch(`/api/deckcards/${id}`, {
-        method: "DELETE",
-    });
-
+    const res = await csrfFetch(`/api/deckcards/${id}`, { method: "DELETE" });
     if (res.ok) {
         dispatch(removeDeckCard(deckId, id));
     }
 };
 
-// Reducer
 const initialState = {};
 
 export default function deckCardsReducer(state = initialState, action) {
@@ -165,40 +145,26 @@ export default function deckCardsReducer(state = initialState, action) {
         }
         case ADD_DECK_CARD: {
             const newState = { ...state };
-            const currentDeckCards = newState[action.deckId]
-                ? { ...newState[action.deckId] }
-                : {};
-
-            currentDeckCards[action.card.id] = {
-                ...(currentDeckCards[action.card.id] || {}),
-                ...action.card,
-            };
-
+            const currentDeckCards = newState[action.deckId] ? { ...newState[action.deckId] } : {};
+            currentDeckCards[action.card.id] = { ...(currentDeckCards[action.card.id] || {}), ...action.card };
             newState[action.deckId] = currentDeckCards;
             return newState;
         }
         case UPDATE_DECK_CARD: {
             const newState = { ...state };
             if (!newState[action.deckId]) return state;
-
             const updatedDeckCards = { ...newState[action.deckId] };
             updatedDeckCards[action.card.id] = action.card;
-
             newState[action.deckId] = updatedDeckCards;
             return newState;
         }
         case SET_COMMANDER_CARD: {
             const newState = { ...state };
             if (!newState[action.deckId]) return state;
-
             const updatedDeckCards = { ...newState[action.deckId] };
-
             Object.values(updatedDeckCards).forEach((c) => {
-                if (c.isCommanderCard && c.id !== action.card.id) {
-                    c.isCommanderCard = false;
-                }
+                if (c.isCommanderCard && c.id !== action.card.id) c.isCommanderCard = false;
             });
-
             updatedDeckCards[action.card.id] = action.card;
             newState[action.deckId] = updatedDeckCards;
             return newState;

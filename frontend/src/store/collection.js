@@ -10,17 +10,27 @@ const addCard = (card) => ({ type: ADD_CARD, card });
 const updateCard = (card) => ({ type: UPDATE_CARD, card });
 const removeCard = (id) => ({ type: REMOVE_CARD, id });
 
-// GET all cards for the authenticated user
+// Proxy helper
+const proxyUrl = (url) => url ? `/api/proxy-card-image?url=${encodeURIComponent(url)}` : null;
+
+const normalizeCard = (card) => ({
+  ...card,
+  imageUrl: proxyUrl(card.imageUrl || card.scryfall?.image_uris?.normal),
+  images: card.scryfall?.card_faces
+    ? card.scryfall.card_faces.map(face => proxyUrl(face.image_uris?.normal))
+    : [proxyUrl(card.imageUrl || card.scryfall?.image_uris?.normal)],
+});
+
 export const fetchCollection = () => async (dispatch) => {
   const res = await csrfFetch('/api/usercards');
   if (res.ok) {
     const data = await res.json();
-    dispatch(loadCards(data));
-    return data;
+    const normalized = data.map(normalizeCard);
+    dispatch(loadCards(normalized));
+    return normalized;
   }
 };
 
-// Add a new card to collection
 export const addToCollection = (card) => async (dispatch) => {
   const res = await csrfFetch('/api/usercards', {
     method: 'POST',
@@ -28,12 +38,12 @@ export const addToCollection = (card) => async (dispatch) => {
   });
   if (res.ok) {
     const data = await res.json();
-    dispatch(addCard(data));
-    return data;
+    const normalized = normalizeCard(data);
+    dispatch(addCard(normalized));
+    return normalized;
   }
 };
 
-// Update existing card quantity using quantity or delta
 export const updateCollectionCard = (id, { quantity, delta }) => async (dispatch) => {
   const res = await csrfFetch(`/api/usercards/${id}`, {
     method: 'PUT',
@@ -41,12 +51,12 @@ export const updateCollectionCard = (id, { quantity, delta }) => async (dispatch
   });
   if (res.ok) {
     const data = await res.json();
-    dispatch(updateCard(data));
-    return data;
+    const normalized = normalizeCard(data);
+    dispatch(updateCard(normalized));
+    return normalized;
   }
 };
 
-// Remove card
 export const removeFromCollection = (id) => async (dispatch) => {
   const res = await csrfFetch(`/api/usercards/${id}`, { method: 'DELETE' });
   if (res.ok) {
@@ -54,7 +64,6 @@ export const removeFromCollection = (id) => async (dispatch) => {
   }
 };
 
-// Reducer
 const initialState = {};
 
 export default function collectionReducer(state = initialState, action) {

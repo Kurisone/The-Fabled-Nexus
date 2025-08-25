@@ -12,6 +12,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import CardSearchForm from "../Forms/CardSearchForm";
 import "./DeckDetailPage.css";
 
+export const proxyUrl = (url) => {
+  if (!url) return null;
+  // Skip if already proxied
+  if (url.startsWith("/api/proxy-card-image")) return url;
+  return `/api/proxy-card-image?url=${encodeURIComponent(url)}`;
+};
 function DeckDetailPage() {
   const { deckId } = useParams();
   const id = Number(deckId);
@@ -49,7 +55,7 @@ function DeckDetailPage() {
   const commander = cards.find((c) => c.isCommanderCard);
   const normalCards = cards.filter((c) => !c.isCommanderCard);
 
-  let deckCoverImage = commander?.imageUrl;
+  let deckCoverImage = commander?.imageUrl ? proxyUrl(commander.imageUrl) : null;
   if (!deckCoverImage && cards.length > 0) {
     const creatureCard = cards.find(
       (card) =>
@@ -58,80 +64,37 @@ function DeckDetailPage() {
     );
     if (creatureCard) {
       deckCoverImage =
-        creatureCard.image_uris?.art_crop ||
-        creatureCard.card_faces?.[0]?.image_uris?.art_crop ||
+        proxyUrl(creatureCard.imageUrl) ||
+        proxyUrl(creatureCard.images?.[0]) ||
         null;
     }
   }
 
   const handleAddCard = async (card) => {
     setError("");
-
-    if (deck.format === "Commander") {
-      const isCommander =
-        card.isCommanderCard ||
-        (card.type_line?.includes("Legendary") &&
-          card.type_line?.includes("Creature"));
-
-      if (isCommander) {
-        if (cards.some((c) => c.isCommanderCard)) {
-          setError("Commander deck can only have 1 commander.");
-          return;
-        }
-      }
-
-      const basicLandNames = [
-        "Plains",
-        "Island",
-        "Swamp",
-        "Mountain",
-        "Forest",
-        "Wastes",
-      ];
-      if (!basicLandNames.includes(card.name)) {
-        if (cards.some((c) => c.name === card.name)) {
-          setError(`Singleton format: only 1 copy of ${card.name} allowed.`);
-          return;
-        }
-      }
-    }
-
-    await dispatch(addCardToDeck(deck.id, card));
+    await dispatch(addCardToDeck(deck.id, {
+      ...card,
+      imageUrl: proxyUrl(card.imageUrl),
+      images: card.images?.map(proxyUrl),
+    }));
   };
+
+  const toggleCardFace = (cardId) => setCardFaces(prev => ({ ...prev, [cardId]: prev[cardId] ? 0 : 1 }));
 
   return (
     <div className="deck-page">
       <h2 className="deck-title">{deck.title}</h2>
-      <p className="deck-format">
-        <strong>Format:</strong> {deck.format}
-      </p>
-      <p className="deck-description">
-        {deck.description || "No description provided."}
-      </p>
+      <p className="deck-format"><strong>Format:</strong> {deck.format}</p>
+      <p className="deck-description">{deck.description || "No description provided."}</p>
 
-      {deckCoverImage && (
-        <img
-          className="deck-cover"
-          src={deckCoverImage}
-          alt={`${deck.title} cover`}
-        />
-      )}
+      {deckCoverImage && <img className="deck-cover" src={deckCoverImage} alt={`${deck.title} cover`} />}
 
       {error && <p className="deck-error">{error}</p>}
 
       <div className="deck-buttons">
-        <button
-          className="edit-button"
-          onClick={() => navigate(`/decks/${deck.id}/edit`)}
-        >
-          Edit Deck Info
-        </button>
-        <button className="delete-button" onClick={handleDeleteDeck}>
-          Delete Deck
-        </button>
-        <button className="back-button" onClick={() => navigate("/decks")}>
-          Back to My Decks
-        </button>
+        <button className="edit-button" onClick={() => navigate(`/decks/${deck.id}/edit`)}>Edit Deck Info</button>
+        <button className="delete-button" onClick={handleDeleteDeck}>Delete Deck</button>
+        <button className="back-button" onClick={() => navigate("/decks")}>Back to My Decks</button>
       </div>
 
       <div className="add-cards-section">
@@ -145,22 +108,13 @@ function DeckDetailPage() {
           <div className="card-item">
             <div
               className="card-image-container"
-              onMouseEnter={() => setZoomCard(commander.imageUrl)}
+              onMouseEnter={() => setZoomCard(proxyUrl(commander.imageUrl))}
               onMouseLeave={() => setZoomCard(null)}
             >
-              <img
-                className="card-image"
-                src={commander.imageUrl}
-                alt={commander.name}
-              />
+              <img className="card-image" src={proxyUrl(commander.imageUrl)} alt={commander.name} />
             </div>
             <span className="card-name">{commander.name}</span>
-            <button
-              className="card-button remove"
-              onClick={() =>
-                dispatch(removeCardFromDeck(deck.id, commander.id))
-              }
-            >
+            <button className="card-button remove" onClick={() => dispatch(removeCardFromDeck(deck.id, commander.id))}>
               Remove Commander
             </button>
           </div>
@@ -174,93 +128,32 @@ function DeckDetailPage() {
         <ul className="cards-list">
           {normalCards.map((card) => {
             const currentFace = cardFaces[card.id] || 0;
-            const images = card.images || [card.imageUrl];
+            const imageUrl = card.images?.[currentFace] || proxyUrl(card.imageUrl);
 
             return (
               <li key={card.id} className="card-item">
                 <div
                   className="card-image-container"
-                  onMouseEnter={() =>
-                    setZoomCard(images[currentFace] || card.imageUrl)
-                  }
+                  onMouseEnter={() => setZoomCard(imageUrl)}
                   onMouseLeave={() => setZoomCard(null)}
                 >
-                  <img
-                    className="card-image"
-                    src={images[currentFace]}
-                    alt={card.name}
-                  />
+                  <img className="card-image" src={imageUrl} alt={card.name} />
                 </div>
 
                 {card.images?.length > 1 && (
-                  <button
-                    className="card-button toggle-face"
-                    onClick={() =>
-                      setCardFaces({
-                        ...cardFaces,
-                        [card.id]: currentFace === 0 ? 1 : 0,
-                      })
-                    }
-                  >
-                    Toggle Face
-                  </button>
+                  <button className="card-button toggle-face" onClick={() => toggleCardFace(card.id)}>Toggle Face</button>
                 )}
 
-                <span className="card-name">
-                  {card.name} (x{card.quantity})
-                </span>
+                <span className="card-name">{card.name} (x{card.quantity})</span>
                 <div className="card-controls">
-                  <button
-                    className="card-button remove"
-                    onClick={() =>
-                      dispatch(removeCardFromDeck(deck.id, card.id))
-                    }
-                  >
-                    Remove
-                  </button>
-
-                  <button
-                    className="card-button increment"
-                    onClick={() => {
-                      if (deck.format === "Commander") {
-                        setError(
-                          `Commander format allows only 1 copy of ${card.name}.`
-                        );
-                        return;
-                      }
-                      dispatch(
-                        updateDeckCard(deck.id, card.id, card.quantity + 1)
-                      );
-                    }}
-                    disabled={deck.format === "Commander"}
-                  >
-                    +1
-                  </button>
-
-                  <button
-                    className="card-button decrement"
-                    onClick={() =>
-                      dispatch(
-                        updateDeckCard(deck.id, card.id, card.quantity - 1)
-                      )
-                    }
-                    disabled={card.quantity <= 1}
-                  >
-                    -1
-                  </button>
-
+                  <button className="card-button remove" onClick={() => dispatch(removeCardFromDeck(deck.id, card.id))}>Remove</button>
+                  <button className="card-button increment" onClick={() => dispatch(updateDeckCard(deck.id, card.id, card.quantity + 1))} disabled={deck.format === "Commander"}>+1</button>
+                  <button className="card-button decrement" onClick={() => dispatch(updateDeckCard(deck.id, card.id, card.quantity - 1))} disabled={card.quantity <= 1}>-1</button>
                   {deck.format === "Commander" && (
-                    <button
-                      className="card-button commander"
-                      onClick={async () => {
-                        const result = await dispatch(
-                          setCommanderCard(deck.id, card.id)
-                        );
-                        if (result?.error) setError(result.error);
-                      }}
-                    >
-                      Set as Commander
-                    </button>
+                    <button className="card-button commander" onClick={async () => {
+                      const result = await dispatch(setCommanderCard(deck.id, card.id));
+                      if (result?.error) setError(result.error);
+                    }}>Set as Commander</button>
                   )}
                 </div>
               </li>

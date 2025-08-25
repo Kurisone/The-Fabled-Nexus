@@ -8,6 +8,12 @@ import {
 } from "../../store/collection";
 import "./CollectionPage.css";
 
+export const proxyUrl = (url) => {
+  if (!url) return null;
+  // Skip if already proxied
+  if (url.startsWith("/api/proxy-card-image")) return url;
+  return `/api/proxy-card-image?url=${encodeURIComponent(url)}`;
+};
 function CollectionPage() {
     const dispatch = useDispatch();
     const user = useSelector((state) => state.session.user);
@@ -18,8 +24,8 @@ function CollectionPage() {
     const [searchResults, setSearchResults] = useState([]);
     const [filterQuery, setFilterQuery] = useState("");
     const [sortKey, setSortKey] = useState("name");
-    const [cardFaces, setCardFaces] = useState({}); // track active face per card
-    const [hoverZoom, setHoverZoom] = useState(null); // card data for zoom overlay
+    const [cardFaces, setCardFaces] = useState({});
+    const [hoverZoom, setHoverZoom] = useState(null);
 
     useEffect(() => {
         if (user) {
@@ -31,23 +37,15 @@ function CollectionPage() {
     if (!user) return <p>Please log in to view your collection.</p>;
     if (loading) return <p>Loading collection...</p>;
 
-    // Filter & sort
     const displayedCards = Object.values(collection)
         .filter((c) => c.name.toLowerCase().includes(filterQuery.toLowerCase()))
-        .sort((a, b) => {
-            if (sortKey === "name") return a.name.localeCompare(b.name);
-            if (sortKey === "quantity") return b.quantity - a.quantity;
-            return 0;
-        });
+        .sort((a, b) => sortKey === "name" ? a.name.localeCompare(b.name) : b.quantity - a.quantity);
 
     const handleSearch = async (e) => {
         e.preventDefault();
         if (!searchQuery.trim()) return;
-
         try {
-            const res = await fetch(
-                `https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}`
-            );
+            const res = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}`);
             if (res.ok) {
                 const data = await res.json();
                 setSearchResults(data.data || []);
@@ -58,35 +56,28 @@ function CollectionPage() {
     };
 
     const handleAddCard = (card) => {
-        const existingCard = Object.values(collection).find(
-            (c) => c.scryfallCardId === card.id
-        );
+        const existingCard = Object.values(collection).find(c => c.scryfallCardId === card.id);
         if (existingCard) {
             dispatch(updateCollectionCard(existingCard.id, { delta: 1 }));
         } else {
-            dispatch(
-                addToCollection({
-                    scryfallCardId: card.id,
-                    name: card.name,
-                    quantity: 1,
-                    scryfall: card,
-                })
-            );
+            dispatch(addToCollection({
+                scryfallCardId: card.id,
+                name: card.name,
+                quantity: 1,
+                imageUrl: proxyUrl(card.image_uris?.normal || card.card_faces?.[0]?.image_uris?.normal),
+                images: card.card_faces
+                    ? card.card_faces.map(face => proxyUrl(face.image_uris?.normal))
+                    : [proxyUrl(card.image_uris?.normal)],
+            }));
         }
     };
 
-    const toggleCardFace = (cardId) => {
-        setCardFaces((prev) => ({
-            ...prev,
-            [cardId]: !prev[cardId],
-        }));
-    };
+    const toggleCardFace = (cardId) => setCardFaces(prev => ({ ...prev, [cardId]: !prev[cardId] }));
 
     return (
         <div className="collection-page">
             <h2 className="collection-title">{`${user.username}'s Collection`}</h2>
 
-            {/* Search/Add Cards */}
             <div className="collection-search">
                 <h3>Add New Cards</h3>
                 <form onSubmit={handleSearch} className="search-form">
@@ -102,26 +93,21 @@ function CollectionPage() {
 
                 <ul className="search-results">
                     {searchResults.map((card) => {
-                        const imageUrl =
-                            card.image_uris?.small ||
-                            card.card_faces?.[0]?.image_uris?.small ||
-                            null;
+                        const activeFace = 0;
+                        const imageUrl = proxyUrl(card.image_uris?.small || card.card_faces?.[activeFace]?.image_uris?.small);
                         return (
                             <li key={card.id} className="search-card">
                                 <div className="card-image-container">
                                     {imageUrl && <img className="search-card-image" src={imageUrl} alt={card.name} />}
                                 </div>
                                 <span className="search-card-name">{card.name}</span>
-                                <button className="search-add-button" onClick={() => handleAddCard(card)}>
-                                    Add to Collection
-                                </button>
+                                <button className="search-add-button" onClick={() => handleAddCard(card)}>Add to Collection</button>
                             </li>
                         );
                     })}
                 </ul>
             </div>
 
-            {/* Filter & sort */}
             {Object.keys(collection).length > 0 && (
                 <div className="collection-controls">
                     <input
@@ -131,34 +117,19 @@ function CollectionPage() {
                         onChange={(e) => setFilterQuery(e.target.value)}
                         className="filter-input"
                     />
-                    <select
-                        value={sortKey}
-                        onChange={(e) => setSortKey(e.target.value)}
-                        className="sort-select"
-                    >
+                    <select value={sortKey} onChange={(e) => setSortKey(e.target.value)} className="sort-select">
                         <option value="name">Sort by Name</option>
                         <option value="quantity">Sort by Quantity</option>
                     </select>
                 </div>
             )}
 
-            {/* Collection list */}
             {Object.keys(collection).length > 0 ? (
                 <ul className="collection-list">
                     {displayedCards.map((card) => {
-                        const isDouble = card.scryfall?.card_faces?.length > 1;
+                        const isDouble = card.images?.length > 1;
                         const activeFace = cardFaces[card.id] ? 1 : 0;
-                        const imageUrl = isDouble
-                            ? card.scryfall.card_faces[activeFace].image_uris?.small
-                            : card.scryfall?.image_uris?.small ||
-                              card.scryfall?.card_faces?.[0]?.image_uris?.small;
-
-                        const zoomUrl = isDouble
-                            ? card.scryfall.card_faces[activeFace].image_uris?.large ||
-                              card.scryfall.card_faces[activeFace].image_uris?.normal
-                            : card.scryfall?.image_uris?.large ||
-                              card.scryfall?.image_uris?.normal ||
-                              card.scryfall?.card_faces?.[0]?.image_uris?.large;
+                        const imageUrl = isDouble ? card.images[activeFace] : card.images?.[0];
 
                         return (
                             <li key={card.id} className="collection-card">
@@ -166,7 +137,7 @@ function CollectionPage() {
                                     {imageUrl && (
                                         <div
                                             className="card-image-container"
-                                            onMouseEnter={() => setHoverZoom({ url: zoomUrl, name: card.name })}
+                                            onMouseEnter={() => setHoverZoom({ url: imageUrl, name: card.name })}
                                             onMouseLeave={() => setHoverZoom(null)}
                                         >
                                             <img className="card-image" src={imageUrl} alt={card.name} />
@@ -176,45 +147,19 @@ function CollectionPage() {
                                         <span className="card-name">{card.name}</span>
                                         <span className="card-quantity">x{card.quantity}</span>
                                     </div>
-                                    {isDouble && (
-                                        <button
-                                            className="card-button toggle-face"
-                                            onClick={() => toggleCardFace(card.id)}
-                                        >
-                                            Flip Face
-                                        </button>
-                                    )}
+                                    {isDouble && <button className="card-button toggle-face" onClick={() => toggleCardFace(card.id)}>Flip Face</button>}
                                 </div>
                                 <div className="card-controls">
-                                    <button
-                                        className="card-button increment"
-                                        onClick={() => dispatch(updateCollectionCard(card.id, { delta: 1 }))}
-                                    >
-                                        +1
-                                    </button>
-                                    <button
-                                        className="card-button decrement"
-                                        onClick={() => dispatch(updateCollectionCard(card.id, { delta: -1 }))}
-                                        disabled={card.quantity <= 1}
-                                    >
-                                        -1
-                                    </button>
-                                    <button
-                                        className="card-button remove"
-                                        onClick={() => dispatch(removeFromCollection(card.id))}
-                                    >
-                                        Remove
-                                    </button>
+                                    <button className="card-button increment" onClick={() => dispatch(updateCollectionCard(card.id, { delta: 1 }))}>+1</button>
+                                    <button className="card-button decrement" onClick={() => dispatch(updateCollectionCard(card.id, { delta: -1 }))} disabled={card.quantity <= 1}>-1</button>
+                                    <button className="card-button remove" onClick={() => dispatch(removeFromCollection(card.id))}>Remove</button>
                                 </div>
                             </li>
                         );
                     })}
                 </ul>
-            ) : (
-                <p>No cards in your collection yet.</p>
-            )}
+            ) : <p>No cards in your collection yet.</p>}
 
-            {/* Zoom overlay */}
             {hoverZoom && (
                 <div className="card-image-zoom-overlay">
                     <img className="card-image-zoom" src={hoverZoom.url} alt={hoverZoom.name} />

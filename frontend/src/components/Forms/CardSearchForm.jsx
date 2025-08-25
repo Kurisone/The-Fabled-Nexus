@@ -3,13 +3,17 @@ import { useDispatch } from "react-redux";
 import { addCardToDeck } from "../../store/deckCards";
 import "./CardSearchForm.css";
 
-// Utility to force HTTPS and provide fallback
-const normalizeUrl = (url) => url?.replace(/^http:\/\//i, "https://") || "/fallback-card.png";
-
+// const normalizeUrl = (url) => url?.replace(/^http:\/\//i, "https://") || "/fallback-card.png";
+export const proxyUrl = (url) => {
+  if (!url) return null;
+  // Skip if already proxied
+  if (url.startsWith("/api/proxy-card-image")) return url;
+  return `/api/proxy-card-image?url=${encodeURIComponent(url)}`;
+};
 const getCardImages = (card) => {
   const images = card.card_faces
-    ? card.card_faces.map((face) => normalizeUrl(face.image_uris.normal))
-    : [normalizeUrl(card.image_uris?.normal)];
+    ? card.card_faces.map((face) => proxyUrl(face.image_uris.normal))
+    : [proxyUrl(card.image_uris?.normal)];
   return images;
 };
 
@@ -28,12 +32,9 @@ function CardSearchForm({ deckId }) {
       const res = await fetch(
         `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}`
       );
-
       if (res.ok) {
         const data = await res.json();
         setResults(data.data || []);
-      } else {
-        console.error("Failed to fetch cards from Scryfall");
       }
     } catch (err) {
       console.error("Error fetching cards:", err);
@@ -63,57 +64,38 @@ function CardSearchForm({ deckId }) {
           onChange={(e) => setQuery(e.target.value)}
           className="card-search-input"
         />
-        <button type="submit" className="card-search-button">
-          Search
-        </button>
+        <button type="submit" className="card-search-button">Search</button>
       </form>
 
       <ul className="card-search-results">
         {results.map((card) => {
           const currentFace = searchCardFaces[card.id] || 0;
           const images = card.card_faces
-            ? card.card_faces.map((face) => normalizeUrl(face.image_uris.small))
-            : [normalizeUrl(card.image_uris?.small)];
+            ? card.card_faces.map((face) => proxyUrl(face.image_uris.small))
+            : [proxyUrl(card.image_uris?.small)];
           const normalImages = getCardImages(card);
 
           return (
             <li key={card.id} className="card-search-item">
-              <div className="card-search-name">
-                <strong>{card.name}</strong>
-              </div>
-
+              <div className="card-search-name"><strong>{card.name}</strong></div>
               <div
                 className="card-image-container"
                 onMouseEnter={() => setZoomCard(normalImages[currentFace])}
                 onMouseLeave={() => setZoomCard(null)}
               >
-                <img
-                  src={images[currentFace]}
-                  alt={card.name}
-                  className="card-search-image"
-                />
+                <img src={images[currentFace]} alt={card.name} className="card-search-image" />
               </div>
-
               {card.card_faces?.length > 1 && (
                 <button
                   className="card-add-button toggle-face"
                   onClick={() =>
-                    setSearchCardFaces({
-                      ...searchCardFaces,
-                      [card.id]: currentFace === 0 ? 1 : 0,
-                    })
+                    setSearchCardFaces({ ...searchCardFaces, [card.id]: currentFace === 0 ? 1 : 0 })
                   }
                 >
                   Toggle Face
                 </button>
               )}
-
-              <button
-                onClick={() => handleAdd(card)}
-                className="card-add-button"
-              >
-                Add to Deck
-              </button>
+              <button onClick={() => handleAdd(card)} className="card-add-button">Add to Deck</button>
             </li>
           );
         })}
@@ -121,11 +103,7 @@ function CardSearchForm({ deckId }) {
 
       {zoomCard && (
         <div className="card-image-zoom-overlay">
-          <img
-            src={zoomCard}
-            alt="Zoomed card"
-            className="card-image-zoom"
-          />
+          <img src={zoomCard} alt="Zoomed card" className="card-image-zoom" />
         </div>
       )}
     </div>
