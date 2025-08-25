@@ -11,8 +11,13 @@ const updateCard = (card) => ({ type: UPDATE_CARD, card });
 const removeCard = (id) => ({ type: REMOVE_CARD, id });
 
 // Proxy helper
-const proxyUrl = (url) => url ? `/api/proxy-card-image?url=${encodeURIComponent(url)}` : null;
+export const proxyUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith("/api/proxy-card-image")) return url; // avoid double-proxy
+  return `/api/proxy-card-image?url=${encodeURIComponent(url)}`;
+};
 
+// Normalize card data
 const normalizeCard = (card) => ({
   ...card,
   imageUrl: proxyUrl(card.imageUrl || card.scryfall?.image_uris?.normal),
@@ -21,6 +26,7 @@ const normalizeCard = (card) => ({
     : [proxyUrl(card.imageUrl || card.scryfall?.image_uris?.normal)],
 });
 
+// Thunks
 export const fetchCollection = () => async (dispatch) => {
   const res = await csrfFetch('/api/usercards');
   if (res.ok) {
@@ -64,15 +70,14 @@ export const removeFromCollection = (id) => async (dispatch) => {
   }
 };
 
+// Reducer
 const initialState = {};
 
 export default function collectionReducer(state = initialState, action) {
   switch (action.type) {
     case LOAD_CARDS: {
       const newState = {};
-      action.cards.forEach((card) => {
-        newState[card.id] = card;
-      });
+      action.cards.forEach((card) => { newState[card.id] = card; });
       return newState;
     }
     case ADD_CARD:
