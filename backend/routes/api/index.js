@@ -7,6 +7,7 @@ const decksRouter = require('./decks.js');
 const deckCardsRouter = require('./deckcards.js');
 const friendshipsRouter = require('./friendships.js');
 const commentsRouter = require('./comments.js'); 
+const scryfallProxyRouter = require('./scryfallproxyimage.js');
 
 // Route mounting
 router.use('/usercards', userCardsRouter);
@@ -15,6 +16,7 @@ router.use('/deckcards', deckCardsRouter);
 router.use('/friendships', friendshipsRouter);
 router.use('/comments', commentsRouter); 
 router.use('/session', sessionRouter);
+router.use('/proxy-card-image', scryfallProxyRouter)
 
 // Middleware to restore user
 router.use(restoreUser);

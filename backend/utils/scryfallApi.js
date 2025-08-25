@@ -16,6 +16,8 @@ async function getCardById(id) {
   return fetchJson(`${SCRYFALL_BASE_URL}/cards/${id}`);
 }
 
+
+
 module.exports = {
   searchCards,
   getCardById,
