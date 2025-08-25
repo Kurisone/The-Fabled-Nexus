@@ -34,7 +34,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'UserCard'
+      modelName: 'UserCard',
+      // schema: process.env.NODE_ENV === 'production' ? process.env.SCHEMA : undefined,
+
     }
   );
 
