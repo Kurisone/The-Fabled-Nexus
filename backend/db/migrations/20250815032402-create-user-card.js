@@ -1,11 +1,8 @@
 'use strict';
-/** @type {import('sequelize-cli').Migration} */
 let options = {};
 if (process.env.NODE_ENV === 'production') {
   options.schema = process.env.SCHEMA;
 }
-
-options.tableName = 'UserCards';
 
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -15,8 +12,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: { model: 'Users', key: 'id' },
-        onDelete: 'CASCADE',
-        field: 'userId'
+        onDelete: 'CASCADE'
       },
       scryfallCardId: { type: Sequelize.STRING, allowNull: false },
       quantity: { type: Sequelize.INTEGER, allowNull: false, defaultValue: 1 },
@@ -24,22 +20,9 @@ module.exports = {
       updatedAt: { allowNull: false, type: Sequelize.DATE, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
     }, options);
 
-    await queryInterface.addConstraint({ tableName: 'UserCards', ...options }, {
-      fields: ['userId'],
-      type: 'foreign key',
-      name: 'usercards_userid_fkey',
-      references: {
-        table: 'Users',
-        field: 'id'
-      },
-      onDelete: 'CASCADE'
-    });
-
-
     await queryInterface.addIndex({ tableName: 'UserCards', ...options }, ['userId']);
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.removeConstraint({ tableName: 'UserCards', ...options }, 'usercards_userid_fkey');
     await queryInterface.dropTable('UserCards', options);
   }
 };

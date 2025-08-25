@@ -3,12 +3,11 @@ let options = {};
 if (process.env.NODE_ENV === 'production') {
   options.schema = process.env.SCHEMA;
 }
-
 options.tableName = 'Comments';
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Comments', {
+    await queryInterface.createTable(options, {
       id: { allowNull: false, autoIncrement: true, primaryKey: true, type: Sequelize.INTEGER },
       userId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'Users', key: 'id' }, onDelete: 'CASCADE' },
       deckId: { type: Sequelize.INTEGER, allowNull: false, references: { model: 'Decks', key: 'id' }, onDelete: 'CASCADE' },
@@ -17,10 +16,10 @@ module.exports = {
       updatedAt: { allowNull: false, type: Sequelize.DATE, defaultValue: Sequelize.literal('CURRENT_TIMESTAMP') }
     }, options);
 
-    await queryInterface.addIndex({ tableName: 'Comments', ...options }, ['userId']);
-    await queryInterface.addIndex({ tableName: 'Comments', ...options }, ['deckId']);
+    await queryInterface.addIndex(options, ['userId']);
+    await queryInterface.addIndex(options, ['deckId']);
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Comments', options);
+    await queryInterface.dropTable(options);
   }
 };
