@@ -1,28 +1,30 @@
-/* CollectionPage.css */
-
 /* Page container */
 .collection-page {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 2rem auto;
-  padding: 1rem 2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #f5f5f5; /* updated */
-  background: #121212; /* optional dark background for contrast */
+  padding: 0 1rem;
+  color: #f5f5f5;
+  font-family: inherit;
 }
 
 /* Page title */
 .collection-title {
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  color: #fff; /* updated */
+  font-size: 1.8rem;
+  font-weight: 600;
   text-align: center;
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.7); /* updated */
+  margin-bottom: 0.5rem;
+  color: #fff;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
 }
 
-/* Search/Add Cards */
+/* Search/Add Cards section */
 .collection-search {
+  background: #1e1e1e;
+  border: 1px solid #2c2c2c;
+  border-radius: 10px;
+  padding: 1.5rem;
   margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .search-form {
@@ -33,70 +35,69 @@
 
 .search-input {
   flex: 1;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px; /* updated to match deck page */
-  border: 1px solid #2c2c2c; /* updated */
-  background: #1e1e1e; /* updated */
-  color: #f5f5f5; /* updated */
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #2c2c2c;
+  background: #1e1e1e;
+  color: #f5f5f5;
 }
 
 .search-button {
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px; /* updated */
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
   border: none;
-  background-color: #1a73e8; /* updated */
-  color: white;
+  background: #d8b13f;
+  color: #1e1e1e;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease-in-out, transform 0.1s ease;
 }
 
 .search-button:hover {
-  background-color: #155ab6; /* updated */
+  background: #b89232;
+  transform: translateY(-2px);
 }
 
-.search-results {
+/* Results and cards list */
+.search-results,
+.collection-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
   list-style: none;
   padding: 0;
 }
 
-.search-card {
-  background-color: #1e1e1e; /* updated */
+.search-card,
+.collection-card {
+  background: #333;
   border-radius: 8px;
-  padding: 0.5rem;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4); /* updated */
-  color: #f5f5f5; /* updated */
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  color: #f5f5f5;
 }
 
-.search-card-image {
+/* Card images */
+.card-image-container {
+  display: inline-block;
+  position: relative;
+}
+
+.search-card-image,
+.card-image {
   width: 100%;
-  height: 180px;
+  max-height: 180px;
   object-fit: contain;
-  border-radius: 4px;
-  margin-bottom: 0.3rem;
-}
-
-.search-add-button {
-  margin-top: 0.3rem;
-  padding: 0.3rem 0.5rem;
-  border-radius: 6px; /* updated */
-  border: none;
-  background-color: #43a047; /* updated */
-  color: white;
-  font-weight: bold;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
-.search-add-button:hover {
-  background-color: #2e7d32; /* updated */
-}
-
-/* Collection Controls */
+/* Collection controls */
 .collection-controls {
   display: flex;
   gap: 0.5rem;
@@ -106,33 +107,14 @@
 .filter-input,
 .sort-select {
   flex: 1;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px; /* updated */
-  border: 1px solid #2c2c2c; /* updated */
-  background: #1e1e1e; /* updated */
-  color: #f5f5f5; /* updated */
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid #2c2c2c;
+  background: #1e1e1e;
+  color: #f5f5f5;
 }
 
-/* Collection Cards */
-.collection-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 1rem;
-  list-style: none;
-  padding: 0;
-}
-
-.collection-card {
-  background-color: #1e1e1e; /* updated */
-  border-radius: 8px;
-  padding: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4); /* updated */
-  color: #f5f5f5; /* updated */
-}
-
+/* Card details */
 .card-main {
   display: flex;
   flex-direction: column;
@@ -140,71 +122,95 @@
   width: 100%;
 }
 
-.card-image {
-  width: 100%;
-  height: 180px;
-  object-fit: contain;
-  border-radius: 4px;
-  margin-bottom: 0.3rem;
-}
-
 .card-name-quantity {
   display: flex;
   justify-content: space-between;
   width: 100%;
   font-weight: 500;
+  margin-top: 0.5rem;
 }
 
 .card-name {
-  text-align: left;
+  color: #f5f5f5;
 }
 
 .card-quantity {
   font-weight: bold;
-  margin-left: 0.5rem;
+  color: black;
 }
 
-/* Controls */
+/* Card controls */
 .card-controls {
   display: flex;
-  gap: 0.3rem;
-  margin-top: 0.3rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  width: 100%;
 }
 
 .card-button {
-  padding: 0.3rem 0.5rem;
-  border-radius: 6px; /* updated */
+  flex: 1;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
   border: none;
-  cursor: pointer;
   font-weight: bold;
-  transition: background 0.2s ease;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
 }
 
 .card-button.increment {
-  background-color: #4a7a4a; /* updated */
-  color: white;
+  background: #4a7a4a;
+  color: #f5f5f5;
 }
 
 .card-button.increment:hover {
-  background-color: #3d653d; /* updated */
+  background: #3d653d;
 }
 
 .card-button.decrement {
-  background-color: #b03a3a; /* updated */
-  color: white;
+  background: #b03a3a;
+  color: #f5f5f5;
 }
 
 .card-button.decrement:hover {
-  background-color: #8c2d2d; /* updated */
+  background: #8c2d2d;
 }
 
 .card-button.remove {
-  background-color: #555; /* updated */
-  color: white;
+  background: #555;
+  color: #f5f5f5;
 }
 
 .card-button.remove:hover {
-  background-color: #444; /* updated */
+  background: #444;
+}
+
+.card-button.toggle-face {
+  background-color: #d8b13f;
+  color: #1e1e1e;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Hover zoom overlay */
+.card-image-zoom-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.card-image-zoom {
+  width: 300px;
+  max-height: 420px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
 }
 
 /* Empty state */
@@ -212,5 +218,5 @@
   text-align: center;
   font-size: 1rem;
   margin-top: 2rem;
-  color: #cfcfcf; /* updated */
+  color: black;
 }

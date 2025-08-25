@@ -23,7 +23,7 @@ export default function HomePage() {
         <div className="hero-content">
           <h2 className="hero-title">Where Fantasy Meets Reality</h2>
           <p className="hero-description">
-            Build powerful decks, catalogue vast collections, and soon — battle
+            Build powerful decks, catalog vast collections, and soon — battle
             friends in epic showdowns across the multiverse.
           </p>
           <div className="hero-buttons">

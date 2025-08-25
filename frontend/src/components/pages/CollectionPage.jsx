@@ -1,4 +1,3 @@
-// src/components/pages/CollectionPage.jsx
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -7,7 +6,7 @@ import {
     updateCollectionCard,
     removeFromCollection,
 } from "../../store/collection";
-import "./CollectionPage.css"; // Make sure this file exists for styling
+import "./CollectionPage.css";
 
 function CollectionPage() {
     const dispatch = useDispatch();
@@ -19,8 +18,9 @@ function CollectionPage() {
     const [searchResults, setSearchResults] = useState([]);
     const [filterQuery, setFilterQuery] = useState("");
     const [sortKey, setSortKey] = useState("name");
+    const [cardFaces, setCardFaces] = useState({}); // track active face per card
+    const [hoverZoom, setHoverZoom] = useState(null); // card data for zoom overlay
 
-    // Fetch collection
     useEffect(() => {
         if (user) {
             setLoading(true);
@@ -40,7 +40,6 @@ function CollectionPage() {
             return 0;
         });
 
-    // Search Scryfall
     const handleSearch = async (e) => {
         e.preventDefault();
         if (!searchQuery.trim()) return;
@@ -58,7 +57,6 @@ function CollectionPage() {
         }
     };
 
-    // Add card to collection
     const handleAddCard = (card) => {
         const existingCard = Object.values(collection).find(
             (c) => c.scryfallCardId === card.id
@@ -71,16 +69,24 @@ function CollectionPage() {
                     scryfallCardId: card.id,
                     name: card.name,
                     quantity: 1,
+                    scryfall: card,
                 })
             );
         }
+    };
+
+    const toggleCardFace = (cardId) => {
+        setCardFaces((prev) => ({
+            ...prev,
+            [cardId]: !prev[cardId],
+        }));
     };
 
     return (
         <div className="collection-page">
             <h2 className="collection-title">{`${user.username}'s Collection`}</h2>
 
-            {/* Search/Add Cards Section */}
+            {/* Search/Add Cards */}
             <div className="collection-search">
                 <h3>Add New Cards</h3>
                 <form onSubmit={handleSearch} className="search-form">
@@ -102,10 +108,10 @@ function CollectionPage() {
                             null;
                         return (
                             <li key={card.id} className="search-card">
-                                <div className="search-card-main">
+                                <div className="card-image-container">
                                     {imageUrl && <img className="search-card-image" src={imageUrl} alt={card.name} />}
-                                    <span className="search-card-name">{card.name}</span>
                                 </div>
+                                <span className="search-card-name">{card.name}</span>
                                 <button className="search-add-button" onClick={() => handleAddCard(card)}>
                                     Add to Collection
                                 </button>
@@ -140,19 +146,44 @@ function CollectionPage() {
             {Object.keys(collection).length > 0 ? (
                 <ul className="collection-list">
                     {displayedCards.map((card) => {
-                        const imageUrl =
-                            card.scryfall?.image_uris?.small ||
-                            card.scryfall?.card_faces?.[0]?.image_uris?.small ||
-                            null;
+                        const isDouble = card.scryfall?.card_faces?.length > 1;
+                        const activeFace = cardFaces[card.id] ? 1 : 0;
+                        const imageUrl = isDouble
+                            ? card.scryfall.card_faces[activeFace].image_uris?.small
+                            : card.scryfall?.image_uris?.small ||
+                              card.scryfall?.card_faces?.[0]?.image_uris?.small;
+
+                        const zoomUrl = isDouble
+                            ? card.scryfall.card_faces[activeFace].image_uris?.large ||
+                              card.scryfall.card_faces[activeFace].image_uris?.normal
+                            : card.scryfall?.image_uris?.large ||
+                              card.scryfall?.image_uris?.normal ||
+                              card.scryfall?.card_faces?.[0]?.image_uris?.large;
 
                         return (
                             <li key={card.id} className="collection-card">
                                 <div className="card-main">
-                                    {imageUrl && <img className="card-image" src={imageUrl} alt={card.name} />}
+                                    {imageUrl && (
+                                        <div
+                                            className="card-image-container"
+                                            onMouseEnter={() => setHoverZoom({ url: zoomUrl, name: card.name })}
+                                            onMouseLeave={() => setHoverZoom(null)}
+                                        >
+                                            <img className="card-image" src={imageUrl} alt={card.name} />
+                                        </div>
+                                    )}
                                     <div className="card-name-quantity">
                                         <span className="card-name">{card.name}</span>
                                         <span className="card-quantity">x{card.quantity}</span>
                                     </div>
+                                    {isDouble && (
+                                        <button
+                                            className="card-button toggle-face"
+                                            onClick={() => toggleCardFace(card.id)}
+                                        >
+                                            Flip Face
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="card-controls">
                                     <button
@@ -181,6 +212,13 @@ function CollectionPage() {
                 </ul>
             ) : (
                 <p>No cards in your collection yet.</p>
+            )}
+
+            {/* Zoom overlay */}
+            {hoverZoom && (
+                <div className="card-image-zoom-overlay">
+                    <img className="card-image-zoom" src={hoverZoom.url} alt={hoverZoom.name} />
+                </div>
             )}
         </div>
     );

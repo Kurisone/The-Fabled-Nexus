@@ -7,6 +7,8 @@ function CardSearchForm({ deckId }) {
   const dispatch = useDispatch();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
+  const [searchCardFaces, setSearchCardFaces] = useState({});
+  const [zoomCard, setZoomCard] = useState(null);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -29,16 +31,16 @@ function CardSearchForm({ deckId }) {
   };
 
   const handleAdd = (card) => {
-    const imageUrl =
-      card.image_uris?.normal ||
-      card.card_faces?.[0]?.image_uris?.normal ||
-      null;
+    const images = card.card_faces
+      ? card.card_faces.map((face) => face.image_uris.normal)
+      : [card.image_uris?.normal];
 
     dispatch(
       addCardToDeck(Number(deckId), {
         scryfallCardId: card.id,
         name: card.name,
-        imageUrl,
+        imageUrl: images[0],
+        images,
         quantity: 1,
       })
     );
@@ -54,31 +56,75 @@ function CardSearchForm({ deckId }) {
           onChange={(e) => setQuery(e.target.value)}
           className="card-search-input"
         />
-        <button type="submit" className="card-search-button">Search</button>
+        <button type="submit" className="card-search-button">
+          Search
+        </button>
       </form>
 
       <ul className="card-search-results">
-        {results.map((card) => (
-          <li key={card.id} className="card-search-item">
-            <div className="card-search-name"><strong>{card.name}</strong></div>
+        {results.map((card) => {
+          const currentFace = searchCardFaces[card.id] || 0;
+          const images = card.card_faces
+            ? card.card_faces.map((face) => face.image_uris.small)
+            : [card.image_uris?.small];
+          const normalImages = card.card_faces
+            ? card.card_faces.map((face) => face.image_uris.normal)
+            : [card.image_uris?.normal];
 
-            {card.image_uris?.small && (
-              <img
-                src={card.image_uris.small}
-                alt={card.name}
-                className="card-search-image"
-              />
-            )}
+          return (
+            <li key={card.id} className="card-search-item">
+              <div className="card-search-name">
+                <strong>{card.name}</strong>
+              </div>
 
-            <button
-              onClick={() => handleAdd(card)}
-              className="card-add-button"
-            >
-              Add to Deck
-            </button>
-          </li>
-        ))}
+              <div
+                className="card-image-container"
+                onMouseEnter={() =>
+                  setZoomCard(normalImages[currentFace])
+                }
+                onMouseLeave={() => setZoomCard(null)}
+              >
+                <img
+                  src={images[currentFace]}
+                  alt={card.name}
+                  className="card-search-image"
+                />
+              </div>
+
+              {card.card_faces?.length > 1 && (
+                <button
+                  className="card-add-button toggle-face"
+                  onClick={() =>
+                    setSearchCardFaces({
+                      ...searchCardFaces,
+                      [card.id]: currentFace === 0 ? 1 : 0,
+                    })
+                  }
+                >
+                  Toggle Face
+                </button>
+              )}
+
+              <button
+                onClick={() => handleAdd(card)}
+                className="card-add-button"
+              >
+                Add to Deck
+              </button>
+            </li>
+          );
+        })}
       </ul>
+
+      {zoomCard && (
+        <div className="card-image-zoom-overlay">
+          <img
+            src={zoomCard}
+            alt="Zoomed card"
+            className="card-image-zoom"
+          />
+        </div>
+      )}
     </div>
   );
 }

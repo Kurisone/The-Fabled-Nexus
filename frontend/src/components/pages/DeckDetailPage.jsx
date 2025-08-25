@@ -1,4 +1,3 @@
-// src/components/pages/DeckDetailPage.jsx
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -26,6 +25,8 @@ function DeckDetailPage() {
   const cards = Object.values(deckCards);
 
   const [error, setError] = useState("");
+  const [cardFaces, setCardFaces] = useState({});
+  const [zoomCard, setZoomCard] = useState(null);
 
   useEffect(() => {
     if (user) dispatch(fetchDecks(user.id));
@@ -50,9 +51,10 @@ function DeckDetailPage() {
 
   let deckCoverImage = commander?.imageUrl;
   if (!deckCoverImage && cards.length > 0) {
-    const creatureCard = cards.find((card) =>
-      card.type_line?.includes("Creature") ||
-      card.card_faces?.[0]?.type_line?.includes("Creature")
+    const creatureCard = cards.find(
+      (card) =>
+        card.type_line?.includes("Creature") ||
+        card.card_faces?.[0]?.type_line?.includes("Creature")
     );
     if (creatureCard) {
       deckCoverImage =
@@ -78,7 +80,14 @@ function DeckDetailPage() {
         }
       }
 
-      const basicLandNames = ["Plains", "Island", "Swamp", "Mountain", "Forest", "Wastes"];
+      const basicLandNames = [
+        "Plains",
+        "Island",
+        "Swamp",
+        "Mountain",
+        "Forest",
+        "Wastes",
+      ];
       if (!basicLandNames.includes(card.name)) {
         if (cards.some((c) => c.name === card.name)) {
           setError(`Singleton format: only 1 copy of ${card.name} allowed.`);
@@ -93,17 +102,28 @@ function DeckDetailPage() {
   return (
     <div className="deck-page">
       <h2 className="deck-title">{deck.title}</h2>
-      <p className="deck-format"><strong>Format:</strong> {deck.format}</p>
-      <p className="deck-description">{deck.description || "No description provided."}</p>
+      <p className="deck-format">
+        <strong>Format:</strong> {deck.format}
+      </p>
+      <p className="deck-description">
+        {deck.description || "No description provided."}
+      </p>
 
       {deckCoverImage && (
-        <img className="deck-cover" src={deckCoverImage} alt={`${deck.title} cover`} />
+        <img
+          className="deck-cover"
+          src={deckCoverImage}
+          alt={`${deck.title} cover`}
+        />
       )}
 
       {error && <p className="deck-error">{error}</p>}
 
       <div className="deck-buttons">
-        <button className="edit-button" onClick={() => navigate(`/decks/${deck.id}/edit`)}>
+        <button
+          className="edit-button"
+          onClick={() => navigate(`/decks/${deck.id}/edit`)}
+        >
           Edit Deck Info
         </button>
         <button className="delete-button" onClick={handleDeleteDeck}>
@@ -123,11 +143,23 @@ function DeckDetailPage() {
         <div className="commander-section">
           <h3>Commander</h3>
           <div className="card-item">
-            <img className="card-image" src={commander.imageUrl} alt={commander.name} />
+            <div
+              className="card-image-container"
+              onMouseEnter={() => setZoomCard(commander.imageUrl)}
+              onMouseLeave={() => setZoomCard(null)}
+            >
+              <img
+                className="card-image"
+                src={commander.imageUrl}
+                alt={commander.name}
+              />
+            </div>
             <span className="card-name">{commander.name}</span>
             <button
               className="card-button remove"
-              onClick={() => dispatch(removeCardFromDeck(deck.id, commander.id))}
+              onClick={() =>
+                dispatch(removeCardFromDeck(deck.id, commander.id))
+              }
             >
               Remove Commander
             </button>
@@ -140,57 +172,107 @@ function DeckDetailPage() {
         <p>No cards yet.</p>
       ) : (
         <ul className="cards-list">
-          {normalCards.map((card) => (
-            <li key={card.id} className="card-item">
-              {card.imageUrl && <img className="card-image" src={card.imageUrl} alt={card.name} />}
-              <span className="card-name">{card.name} (x{card.quantity})</span>
-              <div className="card-controls">
-                <button
-                  className="card-button remove"
-                  onClick={() => dispatch(removeCardFromDeck(deck.id, card.id))}
-                >
-                  Remove
-                </button>
+          {normalCards.map((card) => {
+            const currentFace = cardFaces[card.id] || 0;
+            const images = card.images || [card.imageUrl];
 
-                <button
-                  className="card-button increment"
-                  onClick={() => {
-                    if (deck.format === "Commander") {
-                      setError(`Commander format allows only 1 copy of ${card.name}.`);
-                      return;
-                    }
-                    dispatch(updateDeckCard(deck.id, card.id, card.quantity + 1));
-                  }}
-                  disabled={deck.format === "Commander"}
-                >
-                  +1
-                </button>
-
-                <button
-                  className="card-button decrement"
-                  onClick={() =>
-                    dispatch(updateDeckCard(deck.id, card.id, card.quantity - 1))
+            return (
+              <li key={card.id} className="card-item">
+                <div
+                  className="card-image-container"
+                  onMouseEnter={() =>
+                    setZoomCard(images[currentFace] || card.imageUrl)
                   }
-                  disabled={card.quantity <= 1}
+                  onMouseLeave={() => setZoomCard(null)}
                 >
-                  -1
-                </button>
+                  <img
+                    className="card-image"
+                    src={images[currentFace]}
+                    alt={card.name}
+                  />
+                </div>
 
-                {deck.format === "Commander" && (
+                {card.images?.length > 1 && (
                   <button
-                    className="card-button commander"
-                    onClick={async () => {
-                      const result = await dispatch(setCommanderCard(deck.id, card.id));
-                      if (result?.error) setError(result.error);
-                    }}
+                    className="card-button toggle-face"
+                    onClick={() =>
+                      setCardFaces({
+                        ...cardFaces,
+                        [card.id]: currentFace === 0 ? 1 : 0,
+                      })
+                    }
                   >
-                    Set as Commander
+                    Toggle Face
                   </button>
                 )}
-              </div>
-            </li>
-          ))}
+
+                <span className="card-name">
+                  {card.name} (x{card.quantity})
+                </span>
+                <div className="card-controls">
+                  <button
+                    className="card-button remove"
+                    onClick={() =>
+                      dispatch(removeCardFromDeck(deck.id, card.id))
+                    }
+                  >
+                    Remove
+                  </button>
+
+                  <button
+                    className="card-button increment"
+                    onClick={() => {
+                      if (deck.format === "Commander") {
+                        setError(
+                          `Commander format allows only 1 copy of ${card.name}.`
+                        );
+                        return;
+                      }
+                      dispatch(
+                        updateDeckCard(deck.id, card.id, card.quantity + 1)
+                      );
+                    }}
+                    disabled={deck.format === "Commander"}
+                  >
+                    +1
+                  </button>
+
+                  <button
+                    className="card-button decrement"
+                    onClick={() =>
+                      dispatch(
+                        updateDeckCard(deck.id, card.id, card.quantity - 1)
+                      )
+                    }
+                    disabled={card.quantity <= 1}
+                  >
+                    -1
+                  </button>
+
+                  {deck.format === "Commander" && (
+                    <button
+                      className="card-button commander"
+                      onClick={async () => {
+                        const result = await dispatch(
+                          setCommanderCard(deck.id, card.id)
+                        );
+                        if (result?.error) setError(result.error);
+                      }}
+                    >
+                      Set as Commander
+                    </button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
         </ul>
+      )}
+
+      {zoomCard && (
+        <div className="card-image-zoom-overlay">
+          <img src={zoomCard} alt="Zoomed card" className="card-image-zoom" />
+        </div>
       )}
     </div>
   );

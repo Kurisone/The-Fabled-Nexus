@@ -1,5 +1,3 @@
-/* DeckDetailPage.css */
-
 /* Page container */
 .deck-page {
   max-width: 1000px;
@@ -15,7 +13,7 @@
   font-weight: 600;
   text-align: center;
   margin-bottom: 0.5rem;
-  color: #fff; /* pure white for contrast */
+  color: #fff;
   text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.7);
 }
 
@@ -23,7 +21,7 @@
 .deck-description {
   text-align: center;
   margin-bottom: 0.75rem;
-  color: #e0e0e0; /* brighter than before */
+  color: #e0e0e0;
   text-shadow: 0.5px 0.5px 2px rgba(0, 0, 0, 0.5);
 }
 
@@ -35,18 +33,6 @@
   height: auto;
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  position: relative;
-}
-
-/* Optional overlay for text-on-image */
-.deck-cover-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.35); /* subtle dark overlay */
-  border-radius: 10px;
 }
 
 /* Error messages */
@@ -149,6 +135,10 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
+.card-image-container {
+  display: inline-block;
+}
+
 .card-name {
   font-weight: 500;
   color: #f5f5f5;
@@ -218,10 +208,38 @@
   background: #b89232;
 }
 
+.card-button.toggle-face {
+  background-color: #d8b13f;
+  color: #1e1e1e;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Zoom overlay */
+.card-image-zoom-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.card-image-zoom {
+  width: 300px;
+  max-height: 420px;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+}
+
 /* Empty state */
 .deck-page p {
   text-align: center;
   font-size: 1rem;
   margin-top: 2rem;
-  color: #cfcfcf;
+  color: black;
 }
