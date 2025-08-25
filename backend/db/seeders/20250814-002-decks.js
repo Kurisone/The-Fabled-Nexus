@@ -1,13 +1,13 @@
 'use strict';
 
 let options = {};
-// if (process.env.NODE_ENV === 'production') {
-//   options.schema = process.env.SCHEMA;
-// }
+if (process.env.NODE_ENV === 'production') {
+  options.schema = process.env.SCHEMA;
+}
+options.tableName = 'Decks';
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    options.tableName = 'Decks';
     return queryInterface.bulkInsert(options, [
       {
         userId: 1,
@@ -27,7 +27,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    options.tableName = 'Decks';
     const Op = Sequelize.Op;
     return queryInterface.bulkDelete(options, {
       title: { [Op.in]: ['Mono Green Stompy', 'Izzet Spellslinger'] }
