@@ -3,6 +3,16 @@ import { useDispatch } from "react-redux";
 import { addCardToDeck } from "../../store/deckCards";
 import "./CardSearchForm.css";
 
+// Utility to force HTTPS and provide fallback
+const normalizeUrl = (url) => url?.replace(/^http:\/\//i, "https://") || "/fallback-card.png";
+
+const getCardImages = (card) => {
+  const images = card.card_faces
+    ? card.card_faces.map((face) => normalizeUrl(face.image_uris.normal))
+    : [normalizeUrl(card.image_uris?.normal)];
+  return images;
+};
+
 function CardSearchForm({ deckId }) {
   const dispatch = useDispatch();
   const [query, setQuery] = useState("");
@@ -31,10 +41,7 @@ function CardSearchForm({ deckId }) {
   };
 
   const handleAdd = (card) => {
-    const images = card.card_faces
-      ? card.card_faces.map((face) => face.image_uris.normal)
-      : [card.image_uris?.normal];
-
+    const images = getCardImages(card);
     dispatch(
       addCardToDeck(Number(deckId), {
         scryfallCardId: card.id,
@@ -65,11 +72,9 @@ function CardSearchForm({ deckId }) {
         {results.map((card) => {
           const currentFace = searchCardFaces[card.id] || 0;
           const images = card.card_faces
-            ? card.card_faces.map((face) => face.image_uris.small)
-            : [card.image_uris?.small];
-          const normalImages = card.card_faces
-            ? card.card_faces.map((face) => face.image_uris.normal)
-            : [card.image_uris?.normal];
+            ? card.card_faces.map((face) => normalizeUrl(face.image_uris.small))
+            : [normalizeUrl(card.image_uris?.small)];
+          const normalImages = getCardImages(card);
 
           return (
             <li key={card.id} className="card-search-item">
@@ -79,9 +84,7 @@ function CardSearchForm({ deckId }) {
 
               <div
                 className="card-image-container"
-                onMouseEnter={() =>
-                  setZoomCard(normalImages[currentFace])
-                }
+                onMouseEnter={() => setZoomCard(normalImages[currentFace])}
                 onMouseLeave={() => setZoomCard(null)}
               >
                 <img
